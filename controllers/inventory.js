@@ -84,50 +84,109 @@ exports.addInventory = async (req, res) => {
 
 }
 
+// exports.editInventory = async (req, res) => {
+//     try {
+//         const inventoryId = req.params.id
+
+//         const { stock_name } = req.body
+
+
+//         const checkInventory = "SELECT * FROM inventory WHERE id = $1"
+
+//         const { rows } = await db.query(checkInventory, [inventoryId])
+
+//         if (rows.length === 0) {
+//             return res.status(STATUS_CODES.NOT_FOUND).json(errorJson("Coupon not found"))
+//         }
+
+//         let updateFields = []
+//         let values = []
+//         let index = 1
+
+//         if (stock_name) {
+//             updateFields.push(`stock_name = $${index++}`);
+//             values.push(stock_name)
+//         }
+
+//         updateFields.push(`last_updated = $${index++}`);
+//         values.push(new Date())
+
+//         const updateQuery = `UPDATE inventory SET ${updateFields.join(", ")} WHERE id = $${index} RETURNING *`
+
+//         values.push(inventoryId)
+
+//         const updatedInventory = await db.query(updateQuery, values);
+
+//         return res.status(STATUS_CODES.SUCCESS).json(successJson(
+//             updatedInventory.rows[0],
+//             "Inventory Updated Successfully"
+//         ))
+
+//     } catch (error) {
+//         console.error("Error updating Inventory ", error)
+
+//         return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"))
+//     }
+// }
+
 exports.editInventory = async (req, res) => {
     try {
-        const inventoryId = req.params.id
+        const inventoryId = req.params.id;
+        const { stock_name, items, delimiter } = req.body;
 
-        const { stock_name } = req.body
-
-
-        const checkInventory = "SELECT * FROM inventory WHERE id = $1"
-
-        const { rows } = await db.query(checkInventory, [inventoryId])
+        const checkInventory = "SELECT * FROM inventory WHERE id = $1";
+        const { rows } = await db.query(checkInventory, [inventoryId]);
 
         if (rows.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json(errorJson("Coupon not found"))
+            return res.status(STATUS_CODES.NOT_FOUND).json(errorJson("Inventory not found"));
         }
 
-        let updateFields = []
-        let values = []
-        let index = 1
+        let updateFields = [];
+        let values = [];
+        let index = 1;
 
         if (stock_name) {
             updateFields.push(`stock_name = $${index++}`);
-            values.push(stock_name)
+            values.push(stock_name);
         }
 
         updateFields.push(`last_updated = $${index++}`);
-        values.push(new Date())
+        values.push(new Date());
 
-        const updateQuery = `UPDATE inventory SET ${updateFields.join(", ")} WHERE id = $${index} RETURNING *`
-
-        values.push(inventoryId)
+        const updateQuery = `UPDATE inventory SET ${updateFields.join(", ")} WHERE id = $${index} RETURNING *`;
+        values.push(inventoryId);
 
         const updatedInventory = await db.query(updateQuery, values);
 
+        // If items are passed, insert them into inventory_items
+        if (items && delimiter) {
+            const itemsArray = items.split(delimiter).map(item => item.trim()).filter(Boolean);
+
+            if (itemsArray.length > 0) {
+                const itemValues = [];
+                const placeholders = itemsArray.map((item, i) => {
+                    itemValues.push(item, inventoryId);
+                    return `($${i * 2 + 1}, $${i * 2 + 2})`;
+                }).join(", ");
+
+                const itemQuery = `
+                    INSERT INTO inventory_items (item_name, stock_id)
+                    VALUES ${placeholders};
+                `;
+
+                await db.query(itemQuery, itemValues);
+            }
+        }
+
         return res.status(STATUS_CODES.SUCCESS).json(successJson(
             updatedInventory.rows[0],
-            "Inventory Updated Successfully"
-        ))
-
+            "Inventory updated and items added successfully"
+        ));
     } catch (error) {
-        console.error("Error updating Inventory ", error)
-
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"))
+        console.error("Error updating Inventory:", error);
+        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"));
     }
-}
+};
 
 exports.getAllInventory = async (req, res) => {
     try {
