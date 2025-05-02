@@ -288,8 +288,8 @@ exports.replaceProduct = async (req, res) => {
         // else if (productCheck.rows[0].stock <= 0) {
         //     return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson(`${productCheck.rows[0].name} is not in stock`));
         // }
-
-        const inventoryItemName = productCheck.rows[0].item_name;
+        const inventoryItem = productCheck.rows[0];
+        const inventoryItemName = inventoryItem.item_name;
         const emailProductName = product_name
 
         const updateQuery = `
@@ -323,7 +323,7 @@ exports.replaceProduct = async (req, res) => {
             from: process.env.EMAIL_USER,
             to: customer_email,
             subject: "Your Product Replacement Details",
-            text: `Dear Customer,\n\nYour product replacement has been replaced.\n\nProduct Name: ${emailProductName}\nInventory Item ID: ${inventory_item_id}\n\nThank you.`
+            text: `Dear Customer,\n\nYour product replacement has been replaced.\n\nProduct Name: ${emailProductName}\nInventory Item ID: ${inventoryItemName}\n\nThank you.`
         };
 
         await transporter.sendMail(mailOptions);

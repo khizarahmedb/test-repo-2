@@ -109,7 +109,7 @@ exports.editProduct = async (req, res) => {
     try {
         const productId = req.params.id;
 
-        const { name, description, price, currency, variation, availability, stock, image_url, delivery_time, low_stock_alert, out_of_stock, stock_delimiter } = req.body;
+        const { name, description, price, currency, variation, availability, stock, image_url, delivery_time, low_stock_alert, out_of_stock, stock_delimiter, stock_id } = req.body;
 
         // Check if product exists
         const checkProductQuery = "SELECT * FROM products WHERE id = $1";
@@ -121,7 +121,7 @@ exports.editProduct = async (req, res) => {
 
         const existingProduct = rows[0]; // Existing product details
         const previousStock = existingProduct.stock; // Previous stock quantity
-        const stock_id = existingProduct.stock_id; // Stock ID linked to inventory
+        // const stock_id = existingProduct.stock_id; // Stock ID linked to inventory
 
         let updateFields = [];
         let values = [];
@@ -130,6 +130,11 @@ exports.editProduct = async (req, res) => {
         if (name) {
             updateFields.push(`name = $${index++}`);
             values.push(name);
+        }
+
+        if (stock_id) {
+            updateFields.push(`stock_id = $${index++}`);
+            values.push(stock_id);
         }
 
         if (description) {
