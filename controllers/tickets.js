@@ -2,6 +2,7 @@ const { STATUS_CODES } = require('../constants/status_codes')
 const { errorJson, successJson, Messages } = require('../constants/messages')
 const { db } = require('../config/db_config')
 const upload = require('../middleware/multer_mv')
+const nodemailer = require('nodemailer');
 
 
 exports.createTicket = async (req, res) => {
@@ -264,29 +265,32 @@ exports.getTicketByID = async (req, res) => {
 exports.replaceProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { product_id, customer_email } = req.body;
+        // const { product_id, customer_email } = req.body;
+        const { product_name, inventory_item_id, customer_email } = req.body;
 
 
-        if (!product_id || !id || !customer_email) {
+        if (!product_name || !id || !customer_email || !inventory_item_id) {
             return res
                 .status(STATUS_CODES.BAD_REQUEST)
-                .json(errorJson("Some required fields are missing among (product_id, id, customer_email)"));
+                .json(errorJson("Some required fields are missing among (inventory_item_id, product_name, id, customer_email)"));
         }
 
         const ticketCheck = await db.query('SELECT * FROM tickets WHERE id = $1', [id]);
-        const productCheck = await db.query('SELECT * FROM products WHERE id = $1', [product_id]);
+        const productCheck = await db.query('SELECT * FROM inventory_items WHERE id = $1', [inventory_item_id]);
 
         if (ticketCheck.rows.length === 0) {
             return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid id: Ticket does not exist."));
         } else if (ticketCheck.rows[0].status.toLowerCase() === "resolved") {
             return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("This ticket is already resolved."));
         } else if (productCheck.rows.length === 0) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid product_id: Product does not exist."));
-        } else if (productCheck.rows[0].stock <= 0) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson(`${productCheck.rows[0].name} is not in stock`));
-        }
+            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid inventory_item_id: inventory_item does not exist."));
+        } 
+        // else if (productCheck.rows[0].stock <= 0) {
+        //     return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson(`${productCheck.rows[0].name} is not in stock`));
+        // }
 
-        const productName = productCheck.rows[0].name;
+        const inventoryItemName = productCheck.rows[0].item_name;
+        const emailProductName = product_name
 
         const updateQuery = `
             UPDATE tickets
@@ -300,15 +304,34 @@ exports.replaceProduct = async (req, res) => {
         `;
 
 
-        const { rows } = await db.query(updateQuery, [id, product_id, customer_email]);
+        const { rows } = await db.query(updateQuery, [id, inventory_item_id, customer_email]);
         if (rows.length === 0) {
             return res.status(STATUS_CODES.NOT_FOUND).json("Ticket not found");
         }
 
+        await db.query('UPDATE inventory_items SET status = $1 WHERE id = $2', ['Sold', inventory_item_id]);
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail", 
+            auth: {
+                user: process.env.EMAIL_USER, 
+                pass: process.env.EMAIL_PASS  
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: customer_email,
+            subject: "Your Product Replacement Details",
+            text: `Dear Customer,\n\nYour product replacement has been replaced.\n\nProduct Name: ${emailProductName}\nInventory Item ID: ${inventory_item_id}\n\nThank you.`
+        };
+
+        await transporter.sendMail(mailOptions);
+
 
         return res.status(STATUS_CODES.SUCCESS).json({
-            message: 'Ticket updated successfully',
-            ticket: { ...rows[0], replaced_product_name: productName }
+            message: 'Ticket updated successfully. Email sent',
+            ticket: { ...rows[0], replaced_product_name: inventoryItemName }
         });
 
 
