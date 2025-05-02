@@ -24,7 +24,7 @@ const allowedOrigins = ["http://localhost:9002", "https://front.invader.shop"];
 
 app.use(
   cors({
-    origin: allowedOrigins, // Allow frontend origin
+    origin: "https://front.invader.shop", // Allow frontend origin
     credentials: true, // Allow cookies if needed
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "x-token"],
