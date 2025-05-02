@@ -20,12 +20,7 @@ dbConnection();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const allowedOrigins = [
-  "http://localhost:9002",
-  "https://front.invader.shop",
-  "http://front.invader.shop",
-  "front.invader.shop",
-];
+const allowedOrigins = ["http://localhost:9002", "https://front.invader.shop"];
 
 app.use(
   cors({
