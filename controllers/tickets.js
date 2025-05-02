@@ -1,194 +1,180 @@
-const { STATUS_CODES } = require('../constants/status_codes')
-const { errorJson, successJson, Messages } = require('../constants/messages')
-const { db } = require('../config/db_config')
-const upload = require('../middleware/multer_mv')
-const nodemailer = require('nodemailer');
-
+const { STATUS_CODES } = require("../constants/status_codes");
+const { errorJson, successJson, Messages } = require("../constants/messages");
+const { db } = require("../config/db_config");
+const upload = require("../middleware/multer_mv");
+const nodemailer = require("nodemailer");
 
 exports.createTicket = async (req, res) => {
-    const { order_id, customer_email, description, product_id } = req.body
+  const { order_id, customer_email, description, product_id } = req.body;
 
+  const admin_id = req.user.id;
 
-    const admin_id = req.user.id
+  if (!order_id || !customer_email || !description || !product_id) {
+    return res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(
+        errorJson(
+          "Order ID, customer email, description, and product_id are required"
+        )
+      );
+  }
 
+  // const customerCheckQuery = 'SELECT id FROM user WHERE email = $1';
 
-    if (!order_id || !customer_email || !description || !product_id) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Order ID, customer email, description, and product_id are required"))
-    }
+  // const { customer_id } = await db.query(customerCheckQuery, [customer_email]);
 
+  const productCheckQuery = "SELECT id, name FROM products WHERE id = $1";
 
-    // const customerCheckQuery = 'SELECT id FROM user WHERE email = $1';
+  const { rows } = await db.query(productCheckQuery, [product_id]);
 
+  if (rows.length === 0) {
+    return res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson("Invalid product-id: Product does not exist"));
+  }
 
-    // const { customer_id } = await db.query(customerCheckQuery, [customer_email]);
+  const productName = rows[0].name;
 
+  const invoiceCheck = "SELECT id FROM invoices WHERE id = $1";
+  const result = await db.query(invoiceCheck, [order_id]);
+  if (result.rows.length === 0) {
+    return res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json(errorJson("Invalid order-id: Invoice does not exist"));
+  }
 
-    const productCheckQuery = 'SELECT id, name FROM products WHERE id = $1';
+  try {
+    const createTicket = `
+            INSERT INTO tickets (order_id, customer_email, description, product_id, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *;
+        `;
 
+    const values = [
+      order_id,
+      customer_email,
+      description,
+      product_id,
+      admin_id,
+    ];
 
-    const { rows } = await db.query(productCheckQuery, [product_id]);
+    const result = await db.query(createTicket, values);
 
+    return res.status(STATUS_CODES.CREATED).json({
+      body: { ...result.rows[0], product_name: productName },
+      message: "Ticket created successfully",
+    });
+  } catch (error) {
+    console.log("Ticket cannot be created: ", error);
+    return res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json(errorJson("Internal Server Error"));
+  }
+};
+
+exports.updateTicket = async (req, res) => {
+  try {
+    const ticketId = req.params.id;
+
+    const { order_id, customer_email, description, product_id } = req.body;
+
+    const checkTicket = "SELECT * FROM tickets WHERE id = $1";
+
+    const { rows } = await db.query(checkTicket, [ticketId]);
 
     if (rows.length === 0) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json(
-            errorJson("Invalid product-id: Product does not exist"),
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json(errorJson("Ticket not found"));
+    }
+
+    let updateFields = [];
+    let values = [];
+    let index = 1;
+
+    if (order_id) {
+      updateFields.push(`order_id = $${index++}`);
+      values.push(order_id);
+    }
+
+    if (customer_email) {
+      updateFields.push(`customer_email = $${index++}`);
+      values.push(customer_email);
+    }
+    if (description) {
+      updateFields.push(`description = $${index++}`);
+      values.push(description);
+    }
+
+    if (product_id) {
+      updateFields.push(`product_id = $${index++}`);
+      values.push(product_id);
+    }
+
+    updateFields.push(`updated_at = $${index++}`);
+    values.push(new Date());
+
+    const updateQuery = `UPDATE tickets SET ${updateFields.join(
+      ", "
+    )} WHERE id = $${index} RETURNING *`;
+
+    values.push(ticketId);
+
+    const updatedTicket = await db.query(updateQuery, values);
+
+    return res
+      .status(STATUS_CODES.SUCCESS)
+      .json(successJson(updatedTicket.rows[0], "Ticket Updated Successfully"));
+  } catch (error) {
+    console.error("Error creating ticket: ", error);
+    return res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json(errorJson("Internal Server Error"));
+  }
+};
+
+exports.updateTicketStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isResolved } = req.body;
+
+    if (typeof isResolved !== "boolean") {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(
+          errorJson(
+            "Invalid input: isResolved must be a boolean (true or false)"
+          )
         );
     }
 
+    const newStatus = isResolved ? "Resolved" : "Unresolved";
 
-    const productName = rows[0].name
-
-
-    const invoiceCheck = 'SELECT id FROM invoices WHERE id = $1';
-    const result = await db.query(invoiceCheck, [order_id])
-    if (result.rows.length === 0) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Invalid order-id: Invoice does not exist'));
-    }
-
-
-    try {
-        const createTicket = `
-            INSERT INTO tickets (order_id, customer_email, description, product_id, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *;
-        `
-
-
-        const values = [order_id, customer_email, description, product_id, admin_id]
-
-
-        const result = await db.query(createTicket, values)
-
-
-        return res.status(STATUS_CODES.CREATED).json({
-            body: { ...result.rows[0], product_name: productName },
-            message: "Ticket created successfully"
-        }
-        )
-    } catch (error) {
-        console.log("Ticket cannot be created: ", error);
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"))
-
-
-    }
-}
-
-
-exports.updateTicket = async (req, res) => {
-    try {
-        const ticketId = req.params.id
-
-
-        const { order_id, customer_email, description, product_id } = req.body
-
-
-
-
-        const checkTicket = "SELECT * FROM tickets WHERE id = $1"
-
-
-        const { rows } = await db.query(checkTicket, [ticketId])
-
-
-        if (rows.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json(errorJson("Ticket not found"))
-        }
-
-
-        let updateFields = []
-        let values = []
-        let index = 1
-
-
-        if (order_id) {
-            updateFields.push(`order_id = $${index++}`);
-            values.push(order_id)
-        }
-
-
-        if (customer_email) {
-            updateFields.push(`customer_email = $${index++}`);
-            values.push(customer_email)
-        }
-        if (description) {
-            updateFields.push(`description = $${index++}`);
-            values.push(description)
-        }
-
-
-        if (product_id) {
-            updateFields.push(`product_id = $${index++}`);
-            values.push(product_id)
-        }
-
-
-        updateFields.push(`updated_at = $${index++}`);
-        values.push(new Date())
-
-
-        const updateQuery = `UPDATE tickets SET ${updateFields.join(", ")} WHERE id = $${index} RETURNING *`
-
-
-        values.push(ticketId)
-
-
-        const updatedTicket = await db.query(updateQuery, values);
-
-
-        return res.status(STATUS_CODES.SUCCESS).json(successJson(
-            updatedTicket.rows[0],
-            "Ticket Updated Successfully"
-        ))
-
-
-    } catch (error) {
-        console.error("Error creating ticket: ", error)
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"))
-    }
-}
-
-
-
-
-exports.updateTicketStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { isResolved } = req.body;
-
-
-        if (typeof isResolved !== 'boolean') {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson('Invalid input: isResolved must be a boolean (true or false)'));
-        }
-
-
-        const newStatus = isResolved ? 'Resolved' : 'Unresolved';
-
-
-        const query = `
+    const query = `
             UPDATE tickets
             SET
                 status = $1,
-                resolved_at = ${isResolved ? 'CURRENT_TIMESTAMP' : 'NULL'}
+                resolved_at = ${isResolved ? "CURRENT_TIMESTAMP" : "NULL"}
             WHERE id = $2
             RETURNING *;
         `;
 
+    const { rows } = await db.query(query, [newStatus, id]);
 
-        const { rows } = await db.query(query, [newStatus, id]);
-
-
-        if (rows.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json(errorJson('Ticket not found'));
-        }
-
-
-        return res.status(STATUS_CODES.SUCCESS).json({ message: 'Ticket status updated successfully', ticket: rows[0] });
-    } catch (error) {
-        console.error('Error updating ticket status:', error);
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"));
+    if (rows.length === 0) {
+      return res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json(errorJson("Ticket not found"));
     }
 
-
-}
-
+    return res
+      .status(STATUS_CODES.SUCCESS)
+      .json({ message: "Ticket status updated successfully", ticket: rows[0] });
+  } catch (error) {
+    console.error("Error updating ticket status:", error);
+    return res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json(errorJson("Internal Server Error"));
+  }
+};
 
 // ---get all by filters
 // exports.getAll = async (req, res) => {
@@ -196,7 +182,6 @@ exports.updateTicketStatus = async (req, res) => {
 //         const { order_id, status } = req.query;
 //         let query = "SELECT * FROM tickets";
 //         const values = [];
-
 
 //         if (order_id && status) {
 //             query += " WHERE order_id = $1 AND status = $2";
@@ -209,12 +194,9 @@ exports.updateTicketStatus = async (req, res) => {
 //             values.push(status);
 //         }
 
-
 //         query += " ORDER BY created_at DESC;";
 
-
 //         const { rows } = await db.query(query, values);
-
 
 //         return res.status(STATUS_CODES.SUCCESS).json({ message: 'Tickets fetched successfully', tickets: rows });
 //     } catch (error) {
@@ -223,76 +205,92 @@ exports.updateTicketStatus = async (req, res) => {
 //     }
 // }
 
-
 exports.getAll = async (req, res) => {
-    try {
-        const getTickets = `SELECT * from tickets ORDER BY created_at DESC`
-        const { rows } = await db.query(getTickets)
-        return res.status(STATUS_CODES.SUCCESS).json(successJson(
-            rows,
-            "Tickets Fetched Successfully"
-        ))
-    } catch (error) {
-        console.log("Error fetching tickets: ", error);
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"))
-    }
-}
-
+  try {
+    const getTickets = `SELECT * from tickets ORDER BY created_at DESC`;
+    const { rows } = await db.query(getTickets);
+    return res
+      .status(STATUS_CODES.SUCCESS)
+      .json(successJson(rows, "Tickets Fetched Successfully"));
+  } catch (error) {
+    console.log("Error fetching tickets: ", error);
+    return res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json(errorJson("Internal Server Error"));
+  }
+};
 
 exports.getTicketByID = async (req, res) => {
-    try {
-        const { id } = req.params
-        const getTicket = `SELECT * from tickets where id = $1`
+  try {
+    const { id } = req.params;
+    const getTicket = `SELECT * from tickets where id = $1`;
 
+    const { rows } = await db.query(getTicket, [id]);
 
-        const { rows } = await db.query(getTicket, [id])
-
-
-        if (rows.length === 0) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Ticket Not Found"))
-        }
-
-
-        return res.status(STATUS_CODES.SUCCESS).json(successJson(rows, "ticket fetched successfully"))
-    } catch (error) {
-        console.log("Error fetching the ticket: ", error);
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson("Internal Server Error"))
-
-
+    if (rows.length === 0) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson("Ticket Not Found"));
     }
-}
+
+    return res
+      .status(STATUS_CODES.SUCCESS)
+      .json(successJson(rows, "ticket fetched successfully"));
+  } catch (error) {
+    console.log("Error fetching the ticket: ", error);
+    return res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json(errorJson("Internal Server Error"));
+  }
+};
 
 exports.replaceProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        // const { product_id, customer_email } = req.body;
-        const { product_name, inventory_item_id, customer_email } = req.body;
+  try {
+    const { id } = req.params;
+    // const { product_id, customer_email } = req.body;
+    const { product_name, inventory_item_id, customer_email } = req.body;
 
+    if (!product_name || !id || !customer_email || !inventory_item_id) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(
+          errorJson(
+            "Some required fields are missing among (inventory_item_id, product_name, id, customer_email)"
+          )
+        );
+    }
 
-        if (!product_name || !id || !customer_email || !inventory_item_id) {
-            return res
-                .status(STATUS_CODES.BAD_REQUEST)
-                .json(errorJson("Some required fields are missing among (inventory_item_id, product_name, id, customer_email)"));
-        }
+    const ticketCheck = await db.query("SELECT * FROM tickets WHERE id = $1", [
+      id,
+    ]);
+    const productCheck = await db.query(
+      "SELECT * FROM inventory_items WHERE id = $1",
+      [inventory_item_id]
+    );
 
-        const ticketCheck = await db.query('SELECT * FROM tickets WHERE id = $1', [id]);
-        const productCheck = await db.query('SELECT * FROM inventory_items WHERE id = $1', [inventory_item_id]);
+    if (ticketCheck.rows.length === 0) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson("Invalid id: Ticket does not exist."));
+    } else if (ticketCheck.rows[0].status.toLowerCase() === "resolved") {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(errorJson("This ticket is already resolved."));
+    } else if (productCheck.rows.length === 0) {
+      return res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json(
+          errorJson("Invalid inventory_item_id: inventory_item does not exist.")
+        );
+    }
+    // else if (productCheck.rows[0].stock <= 0) {
+    //     return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson(`${productCheck.rows[0].name} is not in stock`));
+    // }
 
-        if (ticketCheck.rows.length === 0) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid id: Ticket does not exist."));
-        } else if (ticketCheck.rows[0].status.toLowerCase() === "resolved") {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("This ticket is already resolved."));
-        } else if (productCheck.rows.length === 0) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson("Invalid inventory_item_id: inventory_item does not exist."));
-        } 
-        // else if (productCheck.rows[0].stock <= 0) {
-        //     return res.status(STATUS_CODES.BAD_REQUEST).json(errorJson(`${productCheck.rows[0].name} is not in stock`));
-        // }
+    const inventoryItemName = productCheck.rows[0].item_name;
+    const emailProductName = product_name;
 
-        const inventoryItemName = productCheck.rows[0].item_name;
-        const emailProductName = product_name
-
-        const updateQuery = `
+    const updateQuery = `
             UPDATE tickets
             SET 
                 status = 'Resolved' , 
@@ -303,42 +301,43 @@ exports.replaceProduct = async (req, res) => {
             RETURNING *;
         `;
 
-
-        const { rows } = await db.query(updateQuery, [id, inventory_item_id, customer_email]);
-        if (rows.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json("Ticket not found");
-        }
-
-        await db.query('UPDATE inventory_items SET status = $1 WHERE id = $2', ['Sold', inventory_item_id]);
-
-        const transporter = nodemailer.createTransport({
-            service: "gmail", 
-            auth: {
-                user: process.env.EMAIL_USER, 
-                pass: process.env.EMAIL_PASS  
-            }
-        });
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: customer_email,
-            subject: "Your Product Replacement Details",
-            text: `Dear Customer,\n\nYour product replacement has been replaced.\n\nProduct Name: ${emailProductName}\nInventory Item ID: ${inventory_item_id}\n\nThank you.`
-        };
-
-        await transporter.sendMail(mailOptions);
-
-
-        return res.status(STATUS_CODES.SUCCESS).json({
-            message: 'Ticket updated successfully. Email sent',
-            ticket: { ...rows[0], replaced_product_name: inventoryItemName }
-        });
-
-
-    } catch (error) {
-        console.error('Error updating ticket:', error);
-        return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson(error.message));
+    const { rows } = await db.query(updateQuery, [
+      id,
+      inventory_item_id,
+      customer_email,
+    ]);
+    if (rows.length === 0) {
+      return res.status(STATUS_CODES.NOT_FOUND).json("Ticket not found");
     }
-}
 
+    await db.query("UPDATE inventory_items SET status = $1 WHERE id = $2", [
+      "Sold",
+      inventory_item_id,
+    ]);
 
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: customer_email,
+      subject: "Your Product Replacement Details",
+      text: `Dear Customer,\n\nYour product replacement has been replaced.\n\nProduct Name: ${emailProductName}\nItem: ${inventory_item_id}\n\nThank you.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.status(STATUS_CODES.SUCCESS).json({
+      message: "Ticket updated successfully. Email sent",
+      ticket: { ...rows[0], replaced_product_name: inventoryItemName },
+    });
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    return res.status(STATUS_CODES.SERVER_ERROR).json(errorJson(error.message));
+  }
+};
