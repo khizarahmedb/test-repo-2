@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 import { useUserStore, useNavigationStore } from "@/lib/store";
 import { getNavItemsByRole } from "@/lib/navigation";
@@ -17,16 +17,24 @@ import {
 
 export function AppSidebar() {
   const router = useRouter();
-  const { user, clearUser, isLoading } = useUserStore();
+  const pathname = usePathname();
+  const { user, clearUser } = useUserStore();
   const { currentRoute, setRoute } = useNavigationStore();
 
-  // Get navigation items based on user role
   const navItems = React.useMemo(() => {
-    // Default to admin if no role is set
     return getNavItemsByRole("admin");
   }, []);
 
-  // Update the handleNavigation function to ensure it works correctly
+  React.useEffect(() => {
+    if (
+      pathname &&
+      pathname.startsWith("/admin-dashboard") &&
+      pathname !== currentRoute
+    ) {
+      setRoute(pathname);
+    }
+  }, [pathname, currentRoute, setRoute]);
+
   const handleNavigation = (href) => {
     setRoute(href);
     router.push(href);
@@ -38,45 +46,41 @@ export function AppSidebar() {
   };
 
   return (
-    <div className="w-[280px] rounded-3xl m-6 bg-gradient-to-b from-purple-500 to-purple-700 flex flex-col">
-      {/* Header with user profile */}
-      <SidebarHeader className="pt-6 pb-2">
+    <div className="w-[280px] rounded-3xl m-6 bg-gradient-to-b from-purple-500 to-purple-800 flex flex-col">
+      <SidebarHeader className="pt-6 pb-4">
         <div className="flex flex-col items-center gap-2 px-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 overflow-hidden">
-            {/* Avatar placeholder */}
-          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 overflow-hidden"></div>
           <div className="flex flex-col items-center">
+            <span className="text-xs text-white/70">Admin</span>
             <span className="text-sm font-medium text-white">
-              {user?.name || "User"}
-            </span>
-            <span className="text-xs text-white/70">
-              {user?.role || "Role"}
+              {user?.name || "Andrew Smith"}
             </span>
           </div>
         </div>
       </SidebarHeader>
 
-      {/* Menu items */}
-      <SidebarContent className="flex-1 px-4 py-6">
-        <SidebarMenu className="space-y-2">
+      <SidebarContent className="flex-1 px-4 py-2">
+        <SidebarMenu className="space-y-1">
           {navItems.map((item) => {
             const isActive =
-              currentRoute === item.href ||
+              pathname === item.href ||
               (item.href !== "/admin-dashboard" &&
-                currentRoute?.startsWith(item.href)) ||
+                pathname?.startsWith(item.href)) ||
               (item.href === "/admin-dashboard" &&
-                currentRoute === "/admin-dashboard");
+                pathname === "/admin-dashboard");
+
             return (
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   onClick={() => handleNavigation(item.href)}
                   isActive={isActive}
+                  size="lg"
                   className={`
-                    flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all
+                    flex w-full items-center gap-3 rounded-xl px-4 py-4 text-sm font-medium transition-all
                     ${
                       isActive
-                        ? "bg-white text-purple-700"
-                        : "text-white hover:bg-white/10"
+                        ? "bg-white !text-purple-700 hover:text-purple-700"
+                        : "text-white hover:bg-white/10 hover:text-white"
                     }
                   `}
                 >
@@ -84,13 +88,15 @@ export function AppSidebar() {
                     <span
                       className={`
                         h-5 w-5
-                        ${isActive ? "text-purple-700" : "text-white"}
+                        ${isActive ? "!text-purple-700" : "text-white"}
                       `}
                     >
                       {item.icon}
                     </span>
                   )}
-                  <span>{item.label}</span>
+                  <span className={isActive ? "!text-purple-700" : ""}>
+                    {item.label}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
@@ -98,11 +104,10 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      {/* Footer with logout button */}
       <SidebarFooter className="px-4 pb-6">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-4 text-sm font-medium text-purple-700 hover:bg-white/90 transition-colors"
         >
           <LogOut className="h-5 w-5" />
           Logout

@@ -2,46 +2,47 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useUserStore } from "@/lib/store"; // Assuming this path is correct
+import { useUserStore } from "@/lib/store";
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
   const router = useRouter();
-  const { user, isLoading, _hasHydrated } = useUserStore(); // Destructure _hasHydrated
+  const { user, isLoading, _hasHydrated } = useUserStore();
   const [isAuthorized, setIsAuthorized] = useState(true);
-  const [isChecking, setIsChecking] = useState(true); // Still starts as true
+  const [isChecking, setIsChecking] = useState(true);
   const pathname = usePathname();
 
   useEffect(() => {
-    // We are "checking" until the store has hydrated AND is no longer loading.
-    // This is the core change: isChecking depends on _hasHydrated
     if (!_hasHydrated || isLoading) {
-      return; // Still in a loading/hydration state
+      setIsChecking(true);
+      return;
     }
 
-    // At this point, _hasHydrated is true and isLoading is false (meaning initial load is done)
-    setIsChecking(false); // Now we can stop showing the "checking" overlay
+    setIsChecking(false);
 
     if (!user) {
       router.push("/");
       return;
     }
 
+    // **MODIFICATION HERE:**
+    // Use user.role_name for checking against allowedRoles,
+    // assuming allowedRoles contains strings like "Admin".
+    const userRoleForCheck = user.role_name;
     const hasRequiredRole =
-      allowedRoles.length === 0 || allowedRoles.includes(user.role);
+      allowedRoles.length === 0 || allowedRoles.includes(userRoleForCheck);
 
     if (!hasRequiredRole) {
-      // Redirect if the user does NOT have the required role
-      // Ensure user.role_name matches your actual role names
+      // This block is entered if the user's role_name does not match allowedRoles
+      // for the current path.
+      // It then redirects them to their default dashboard based on their role_name.
       switch (user.role_name) {
         case "Admin":
           router.push("/admin-dashboard");
-          console.log(user.role_name, " path ", pathname);
-
           break;
-        case "superadmin": // Add other roles if needed
+        case "superadmin":
           router.push("/superadmin-dashboard");
           break;
-        case "agent": // Add other roles if needed
+        case "agent":
           router.push("/agent-dashboard");
           break;
         default:
@@ -50,12 +51,11 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
       return;
     }
 
-    // If user exists AND has the required role
+    // If we reach here, the user has the required role for the current path.
     setIsAuthorized(true);
-  }, [user, allowedRoles, router, isLoading, _hasHydrated]); // Add _hasHydrated to dependencies
+  }, [user, allowedRoles, router, isLoading, _hasHydrated, pathname]);
 
-  // Render loading if we are still hydrating OR actively loading
-  if (isLoading || isChecking) {
+  if (isChecking) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">

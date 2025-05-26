@@ -36,9 +36,9 @@ export const useUserStore = create(
 export const useNavigationStore = create(
   persist(
     (set) => ({
-      currentRoute: "/admin-dashboard", // Default to admin dashboard
+      currentRoute: "/",
       setRoute: (route) => set({ currentRoute: route }),
-      clearRoute: () => set({ currentRoute: "/admin-dashboard" }), // Reset to admin dashboard
+      clearRoute: () => set({ currentRoute: "/" }),
     }),
     {
       name: "navigation-storage", // Unique name for local storage

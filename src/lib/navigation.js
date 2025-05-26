@@ -1,18 +1,18 @@
 import {
   Users,
   Settings,
-  Database,
   BarChart,
-  FolderPlus,
-  User,
-  Upload,
   FileText,
-  DollarSign,
   Home,
   ShoppingCart,
   CreditCard,
   HelpCircle,
   Bell,
+  ShoppingBag,
+  Tag,
+  MessageSquare,
+  Package,
+  Star,
 } from "lucide-react";
 
 // Admin navigation items
@@ -25,42 +25,37 @@ export const adminNavItems = [
   {
     label: "Products",
     href: "/admin-dashboard/products",
-    icon: <Users className="h-5 w-5" />,
+    icon: <ShoppingBag className="h-5 w-5" />,
   },
   {
     label: "Invoices",
     href: "/admin-dashboard/invoices",
-    icon: <FolderPlus className="h-5 w-5" />,
+    icon: <FileText className="h-5 w-5" />,
   },
   {
     label: "Coupons",
     href: "/admin-dashboard/coupons",
-    icon: <Database className="h-5 w-5" />,
+    icon: <Tag className="h-5 w-5" />,
   },
   {
     label: "Tickets",
     href: "/admin-dashboard/tickets",
-    icon: <Upload className="h-5 w-5" />,
+    icon: <MessageSquare className="h-5 w-5" />,
   },
   {
     label: "Inventory",
     href: "/admin-dashboard/inventory",
-    icon: <DollarSign className="h-5 w-5" />,
-  },
-  {
-    label: "Reports",
-    href: "/admin-dashboard/reports",
-    icon: <FileText className="h-5 w-5" />,
+    icon: <Package className="h-5 w-5" />,
   },
   {
     label: "Users",
     href: "/admin-dashboard/users",
-    icon: <User className="h-5 w-5" />,
+    icon: <Users className="h-5 w-5" />,
   },
   {
     label: "Reviews",
     href: "/admin-dashboard/reviews",
-    icon: <FileText className="h-5 w-5" />,
+    icon: <Star className="h-5 w-5" />,
   },
   {
     label: "Settings",
@@ -118,7 +113,7 @@ export const staffNavItems = [
   {
     label: "Inventory",
     href: "/staff/inventory",
-    icon: <DollarSign className="h-5 w-5" />,
+    icon: <Package className="h-5 w-5" />,
   },
   {
     label: "Customers",

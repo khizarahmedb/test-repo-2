@@ -1,32 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Calendar, Percent } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useUser } from "@/context/userContext";
-import { addCoupon, editCoupon, deleteCoupon } from "@/utils/axiosInstance"; // Adjust import path as needed
+import { Calendar } from "lucide-react";
+import { toast } from "sonner";
 
-export function CouponModal({ isOpen, onClose, mode, coupon }) {
-  const { user, coupons, setCoupons, fetchData } = useUser();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function CouponModal({
+  isOpen,
+  onClose,
+  onSave,
+  onDelete,
+  coupon = null,
+  title = "Add Coupon",
+}) {
   const [formData, setFormData] = useState({
     coupon_name: "",
     coupon_code: "",
-    discount_percent: 0,
-    max_limit: 0,
+    discount_percent: "",
+    max_limit: "",
     expiry_date: "",
   });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form data when modal opens or changes mode
+  // Initialize form with coupon data if editing
   useEffect(() => {
-    if (mode === "edit" && coupon) {
+    if (coupon) {
       // Format the date for the input field (YYYY-MM-DD)
       let formattedDate = "";
       if (coupon.expiry_date) {
@@ -37,91 +35,92 @@ export function CouponModal({ isOpen, onClose, mode, coupon }) {
       setFormData({
         coupon_name: coupon.coupon_name || "",
         coupon_code: coupon.coupon_code || "",
-        discount_percent: coupon.discount_percent || 0,
-        max_limit: coupon.max_limit || 0,
+        discount_percent: coupon.discount_percent || "",
+        max_limit: coupon.max_limit || coupon.usage_limit || "",
         expiry_date: formattedDate,
       });
     } else {
-      // Reset form for add mode
+      // Reset form for new coupon
       setFormData({
         coupon_name: "",
         coupon_code: "",
-        discount_percent: 0,
-        max_limit: 0,
+        discount_percent: "",
+        max_limit: "",
         expiry_date: "",
       });
     }
-    setIsSubmitting(false);
-  }, [mode, coupon, isOpen]);
+    setErrors({});
+  }, [coupon, isOpen]);
 
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
-  const handleNumberInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value ? Number(value) : 0 }));
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.coupon_name.trim())
+      newErrors.coupon_name = "Coupon name is required";
+    if (!formData.coupon_code.trim())
+      newErrors.coupon_code = "Coupon code is required";
+    if (!formData.discount_percent)
+      newErrors.discount_percent = "Discount is required";
+    if (
+      isNaN(Number(formData.discount_percent)) ||
+      Number(formData.discount_percent) <= 0 ||
+      Number(formData.discount_percent) > 100
+    )
+      newErrors.discount_percent = "Discount must be between 1 and 100";
+    if (!formData.max_limit) newErrors.max_limit = "Usage limit is required";
+    if (isNaN(Number(formData.max_limit)) || Number(formData.max_limit) <= 0)
+      newErrors.max_limit = "Usage limit must be a positive number";
+    if (!coupon && !formData.expiry_date)
+      newErrors.expiry_date = "Expiry date is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form", {
+        description: "Some required fields are missing or invalid.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
-      // Format the data for API
+      // Prepare data for API
       const apiData = {
-        ...formData,
-        // Ensure expiry_date is in the correct format for the API
-        expiry_date: formData.expiry_date
-          ? new Date(formData.expiry_date).toISOString()
-          : null,
+        coupon_name: formData.coupon_name,
+        coupon_code: formData.coupon_code,
+        discount_percent: Number(formData.discount_percent),
+        max_limit: Number(formData.max_limit),
       };
 
-      if (mode === "add") {
-        // Add new coupon
-        const response = await addCoupon(user.token, apiData);
-        console.log("Coupon added successfully", response);
-
-        // Option 1: Update the coupons state directly with the new coupon
-        if (response && response.body) {
-          setCoupons([...coupons, response.body]);
-        } else {
-          // Option 2: Refetch all data if the response doesn't include the new coupon
-          await fetchData();
-        }
-      } else {
-        // Edit existing coupon
-        const response = await editCoupon(user.token, coupon.id, apiData);
-        console.log("Coupon updated successfully", response);
-
-        // Option 1: Update the specific coupon in the state
-        if (response && response.body) {
-          setCoupons(
-            coupons.map((c) => (c.id === coupon.id ? response.body : c))
-          );
-        } else {
-          // Option 2: Update the coupon in state with local data
-          const updatedCoupon = {
-            ...coupon,
-            ...apiData,
-            // Keep other fields that might not be in the form
-            id: coupon.id,
-            created_at: coupon.created_at,
-            created_by: coupon.created_by,
-            usage_limit: coupon.usage_limit,
-          };
-          setCoupons(
-            coupons.map((c) => (c.id === coupon.id ? updatedCoupon : c))
-          );
-        }
+      // Only include expiry_date if it's provided
+      if (formData.expiry_date) {
+        apiData.expiry_date = formData.expiry_date;
       }
 
-      // Close the modal
+      await onSave(apiData);
       onClose();
     } catch (error) {
       console.error("Error saving coupon:", error);
-      // Option 3: Always refetch on error to ensure data consistency
-      await fetchData();
+      // Error is handled by the parent component
     } finally {
       setIsSubmitting(false);
     }
@@ -130,140 +129,191 @@ export function CouponModal({ isOpen, onClose, mode, coupon }) {
   const handleDelete = async () => {
     if (!coupon || !coupon.id) return;
 
-    try {
-      setIsSubmitting(true);
-      await deleteCoupon(user.token, coupon.id);
-      console.log("Coupon deleted successfully");
-
-      // Option 1: Remove the deleted coupon from state
-      setCoupons(coupons.filter((c) => c.id !== coupon.id));
-
-      onClose();
-    } catch (error) {
-      console.error("Error deleting coupon:", error);
-      // Refetch on error to ensure data consistency
-      await fetchData();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const CloseButton = () => (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="absolute right-4 top-4 text-gray-400 hover:text-white"
-      onClick={onClose}
-    >
-      <X className="h-4 w-4" />
-    </Button>
-  );
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="no-scrollbar bg-black text-white border-gray-800 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white">
-            {mode === "add" ? "Add Coupon" : "Edit Coupon"}
-          </DialogTitle>
-          <CloseButton />
-        </DialogHeader>
-
-        {/* Delete button only shown in edit mode */}
-        {mode === "edit" && (
-          <Button
-            variant="destructive"
-            className="absolute right-4 top-4 bg-red-600 hover:bg-red-700"
-            onClick={handleDelete}
-            disabled={isSubmitting}
-          >
-            Delete Coupon
-          </Button>
-        )}
-
-        <div className="grid gap-4 py-4">
-          {/* Coupon Name */}
-          <Input
-            name="coupon_name"
-            placeholder="Name"
-            value={formData.coupon_name}
-            onChange={handleInputChange}
-            className="bg-gray-900 border-gray-700"
-            disabled={isSubmitting}
-          />
-
-          {/* Coupon Code */}
-          <Input
-            name="coupon_code"
-            placeholder="Code"
-            value={formData.coupon_code}
-            onChange={handleInputChange}
-            className="bg-gray-900 border-gray-700"
-            disabled={isSubmitting}
-          />
-
-          {/* Discount Percentage */}
-          <div className="relative">
-            <Input
-              name="discount_percent"
-              type="number"
-              placeholder="Discount"
-              value={formData.discount_percent || ""}
-              onChange={handleNumberInputChange}
-              className="bg-gray-900 border-gray-700 pr-10"
-              min="0"
-              max="100"
-              disabled={isSubmitting}
-            />
-            <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
-
-          {/* Expiry Date and Usage Limit */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <Input
-                name="expiry_date"
-                type="date"
-                placeholder="Expiry Date"
-                value={formData.expiry_date}
-                onChange={handleInputChange}
-                className="bg-gray-900 border-gray-700"
-                disabled={isSubmitting}
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-            <Input
-              name="max_limit"
-              type="number"
-              placeholder="Usage Limit"
-              value={formData.max_limit || ""}
-              onChange={handleNumberInputChange}
-              className="bg-gray-900 border-gray-700"
-              min="0"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="bg-gray-800 hover:bg-gray-700 border-gray-700"
-            disabled={isSubmitting}
+    // Use toast confirmation instead of browser confirm
+    toast.custom((t) => (
+      <div className="bg-black border custom-thin-purple-scrollbar border-purple-600 rounded-lg p-4 shadow-lg">
+        <h3 className="text-white font-medium mb-2">Confirm Deletion</h3>
+        <p className="text-gray-300 mb-4">
+          Are you sure you want to delete this coupon?
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 bg-gray-700 text-white rounded-md hover:bg-gray-600"
           >
             Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            className="bg-purple-600 hover:bg-purple-700"
-            disabled={isSubmitting}
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              setIsSubmitting(true);
+              try {
+                await onDelete(coupon.id);
+                onClose();
+              } catch (error) {
+                console.error("Error deleting coupon:", error);
+                // Error is handled by the parent component
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}
+            className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
           >
-            {isSubmitting ? "Saving..." : "Save"}
-          </Button>
+            Delete
+          </button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    ));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0  bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-[#161616] rounded-xl w-full max-w-xl p-6 border border-purple-600">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-white">
+            {coupon ? "Edit Coupon" : "Add Coupon"}
+          </h2>
+          {coupon && (
+            <button
+              onClick={handleDelete}
+              className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors"
+              disabled={isSubmitting}
+            >
+              Delete Coupon
+            </button>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            {/* Coupon Name */}
+            <div>
+              <input
+                type="text"
+                name="coupon_name"
+                value={formData.coupon_name}
+                onChange={handleChange}
+                placeholder="Name"
+                className={`w-full bg-[#242424] border ${
+                  errors.coupon_name ? "border-red-500" : "border-gray-700"
+                } rounded-md p-3 text-white placeholder-gray-400`}
+              />
+              {errors.coupon_name && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.coupon_name}
+                </p>
+              )}
+            </div>
+
+            {/* Coupon Code */}
+            <div>
+              <input
+                type="text"
+                name="coupon_code"
+                value={formData.coupon_code}
+                onChange={handleChange}
+                placeholder="Code"
+                className={`w-full bg-[#242424] border ${
+                  errors.coupon_code ? "border-red-500" : "border-gray-700"
+                } rounded-md p-3 text-white placeholder-gray-400`}
+              />
+              {errors.coupon_code && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.coupon_code}
+                </p>
+              )}
+            </div>
+
+            {/* Discount */}
+            <div className="relative">
+              <input
+                type="number"
+                name="discount_percent"
+                value={formData.discount_percent}
+                onChange={handleChange}
+                placeholder="Discount"
+                className={`w-full bg-[#242424] border ${
+                  errors.discount_percent ? "border-red-500" : "border-gray-700"
+                } rounded-md p-3 text-white placeholder-gray-400`}
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                %
+              </div>
+              {errors.discount_percent && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.discount_percent}
+                </p>
+              )}
+            </div>
+
+            {/* Expiry Date and Usage Limit */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <input
+                  type="date"
+                  name="expiry_date"
+                  value={formData.expiry_date}
+                  onChange={handleChange}
+                  placeholder="Expiry Date"
+                  className={`w-full bg-[#242424] border ${
+                    errors.expiry_date ? "border-red-500" : "border-gray-700"
+                  } rounded-md p-3 text-white placeholder-gray-400`}
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                {errors.expiry_date && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.expiry_date}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <input
+                  type="number"
+                  name="max_limit"
+                  value={formData.max_limit}
+                  onChange={handleChange}
+                  placeholder="Usage Limit"
+                  className={`w-full bg-[#242424] border ${
+                    errors.max_limit ? "border-red-500" : "border-gray-700"
+                  } rounded-md p-3 text-white placeholder-gray-400`}
+                />
+                {errors.max_limit && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.max_limit}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Form Error */}
+            {errors.form && (
+              <p className="text-red-500 text-sm">{errors.form}</p>
+            )}
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="bg-gray-700 text-white py-3 rounded-md hover:bg-gray-600 transition-colors"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-linear-2-paints text-white py-3 rounded-md transition-colors"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

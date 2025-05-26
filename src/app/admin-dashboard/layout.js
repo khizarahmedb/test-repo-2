@@ -12,9 +12,9 @@ export default function AdminDashboardLayout({ children }) {
   return (
     <ProtectedRoute allowedRoles={["Admin"]}>
       <SidebarProvider>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen w-[100vw]">
           <AppSidebar />
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex w-[80vw] p-6">{children}</main>
         </div>
       </SidebarProvider>
     </ProtectedRoute>

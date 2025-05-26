@@ -1,4 +1,3 @@
-// api.js
 import axios from "axios";
 import { encryptData, decryptData } from "./crypto"; // Adjust path as needed
 
@@ -39,6 +38,22 @@ api.interceptors.request.use(
         return Promise.reject(
           new Error("Failed to encrypt request data. Please try again.")
         );
+      }
+    }
+    // Get token from localStorage if available
+    if (typeof window !== "undefined") {
+      const userStorage = localStorage.getItem("user-storage");
+      if (userStorage) {
+        try {
+          const userData = JSON.parse(userStorage);
+          const token = userData?.state?.user?.token;
+
+          if (token) {
+            config.headers["x-token"] = token;
+          }
+        } catch (error) {
+          console.error("Error parsing user storage:", error);
+        }
       }
     }
     return config;
@@ -117,6 +132,69 @@ export const getUserProfile = async (token) => {
     },
   };
   const response = await api.get("/user/profile", config);
+  return response.data;
+};
+
+// Coupons pagination function
+export const getCoupons = async (startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/coupon?startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
+  return response.data;
+};
+
+// Create a new coupon
+export const createCoupon = async (couponData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/coupon", couponData, config);
+  return response.data;
+};
+
+// Update an existing coupon
+export const updateCoupon = async (id, couponData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/coupon/${id}`, couponData, config);
+  return response.data;
+};
+
+// Delete a coupon
+export const deleteCoupon = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/coupon/${id}`, config);
   return response.data;
 };
 
