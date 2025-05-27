@@ -33,7 +33,7 @@ export function CustomTable({ columns, data, className = "" }) {
     >
       {/* Table component for the fixed header */}
       {/* TableHeader now has its own rounding and overflow-hidden */}
-      <div className="bg-gradient-to-r from-purple-700 to-purple-500 rounded-lg overflow-hidden sticky top-0 z-10 shadow-lg">
+      <div className="btn-gradient-paint rounded-lg overflow-hidden sticky top-0 z-10 shadow-lg">
         <Table className="bg-transparent table-fixed min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

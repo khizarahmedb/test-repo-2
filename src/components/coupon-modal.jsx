@@ -298,14 +298,14 @@ export function CouponModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-gray-700 text-white py-3 rounded-md hover:bg-gray-600 transition-colors"
+                className="btn-gradient-gray text-white py-3 rounded-md hover:bg-gray-600 transition-colors"
                 disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-linear-2-paints text-white py-3 rounded-md transition-colors"
+                className="btn-gradient-paint text-white py-3 rounded-md transition-colors"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Saving..." : "Save"}

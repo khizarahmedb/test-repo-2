@@ -290,7 +290,7 @@ export default function CouponsPage() {
         <h1 className="text-3xl font-bold text-white">Coupons</h1>
         <button
           onClick={handleAddCoupon}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
+          className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
         >
           <div className="border-white border-2 rounded-md p-[2px]">
             <Plus size={18} />

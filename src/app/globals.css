@@ -208,3 +208,27 @@ input:-webkit-autofill:active {
   scrollbar-width: thin; /* Makes scrollbar thin */
   scrollbar-color: #ab51de transparent; /* Thumb color and Track color */
 }
+
+.btn-gradient-paint {
+  background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0) 22.94%,
+      rgba(255, 255, 255, 0) 72.33%,
+      rgba(255, 255, 255, 0.2) 100%
+    ),
+    linear-gradient(119deg, #5d43e1 12.9%, #ab51de 86.02%);
+}
+
+.btn-gradient-gray {
+  background: linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.1) 100%
+    ),
+    linear-gradient(
+      119deg,
+      rgba(93, 67, 225, 0.2) 12.9%,
+      rgba(171, 81, 222, 0.2) 86.02%
+    );
+}

@@ -46,7 +46,7 @@ export function AppSidebar() {
   };
 
   return (
-    <div className="w-[280px] rounded-3xl m-6 bg-gradient-to-b from-purple-500 to-purple-800 flex flex-col">
+    <div className="w-[280px] rounded-3xl m-6 btn-gradient-paint flex flex-col">
       <SidebarHeader className="pt-6 pb-4">
         <div className="flex flex-col items-center gap-2 px-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 overflow-hidden"></div>
