@@ -213,4 +213,78 @@ export const changePassword = async (passwordData, token) => {
   return response.data;
 };
 
+export const getUsers = async (
+  startsWith,
+  endsWith,
+  token,
+  role,
+  searchQuery
+) => {
+  const paths = {
+    customers: "customers",
+    managers: "managers",
+    resellers: "resellers",
+    stockers: "stockers",
+    supports: "supports",
+  };
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/${paths[role]}?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const createUser = async (userData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/create/user", userData, config);
+  return response.data;
+};
+
+export const updateUser = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/change-role`, data, config);
+  return response.data;
+};
+
+export const getRoles = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(`/get-roles`, config);
+  return response.data;
+};
+
 export default api;
