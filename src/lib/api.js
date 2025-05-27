@@ -287,4 +287,35 @@ export const getRoles = async (token) => {
   return response.data;
 };
 
+export const getReviews = async (startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/reviews?startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
+  return response.data;
+};
+
+export const updateReview = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/reviews/${id}`, data, config);
+  return response.data;
+};
+
 export default api;
