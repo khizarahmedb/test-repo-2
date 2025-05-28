@@ -5,6 +5,13 @@ import { Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { useUserStore } from "@/lib/store";
 import { getRoles } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
   const { user } = useUserStore();
@@ -18,12 +25,16 @@ export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleChange = (e, opName) => {
+    if (opName) {
+      setFormData({ ...formData, [opName]: e });
+    } else {
+      const { name, value } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: typeof e !== "object" ? e : value,
+      }));
+    }
 
     // Clear error when field is edited
     if (errors[name]) {
@@ -125,7 +136,7 @@ export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
       setFormData({
         user_name: selectedUser.name,
         email: selectedUser.email,
-        role: selectedUser.role_id,
+        role: String(selectedUser.role_id),
       });
     } else {
       setFormData({
@@ -137,6 +148,18 @@ export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
     }
     setErrors({});
   }, [selectedUser, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const scrollBarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -207,27 +230,35 @@ export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
             )}
 
             {/* Role */}
+
             <div>
-              <select
+              <Select
                 name="role"
                 value={formData.role}
-                onChange={handleChange}
-                className={`w-full bg-[#242424] border ${
-                  errors.role ? "border-red-500" : "border-gray-700"
-                } rounded-md p-3 text-white placeholder-gray-400`}
+                onValueChange={(e) => handleChange(e, "role")}
               >
-                <option value="" disabled>
-                  Select a Role
-                </option>
-                {rolesData.length > 0 &&
-                  rolesData.map((role) => {
-                    return (
-                      <option value={role.id} key={role.id}>
-                        {role.name}
-                      </option>
-                    );
-                  })}
-              </select>
+                <SelectTrigger
+                  className={`w-full bg-[#242424] text-base cursor-pointer border ${
+                    errors.role ? "border-red-500" : "border-gray-700"
+                  } rounded-md p-6 text-white placeholder-gray-400`}
+                >
+                  <SelectValue placeholder="Select a Role" />
+                </SelectTrigger>
+                <SelectContent className={"text-white"}>
+                  {rolesData.length > 0 &&
+                    rolesData.map((role) => {
+                      return (
+                        <SelectItem
+                          value={String(role.id)}
+                          key={role.id}
+                          className={"p-4 text-base"}
+                        >
+                          {role.name}
+                        </SelectItem>
+                      );
+                    })}
+                </SelectContent>
+              </Select>
               {errors.role && (
                 <p className="text-red-500 text-xs mt-1">{errors.role}</p>
               )}

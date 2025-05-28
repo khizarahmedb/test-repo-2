@@ -7,6 +7,13 @@ import { useUserStore } from "@/lib/store";
 import { getRoles } from "@/lib/api";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function UpdateReviewModal({ isOpen, onClose, onSave, selectedReview }) {
   const { user } = useUserStore();
@@ -39,13 +46,16 @@ export function UpdateReviewModal({ isOpen, onClose, onSave, selectedReview }) {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleChange = (e, opName) => {
+    if (opName) {
+      setFormData({ ...formData, [opName]: e });
+    } else {
+      const { name, value } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: typeof e !== "object" ? e : value,
+      }));
+    }
 
     // Clear error when field is edited
     if (errors[name]) {
@@ -60,7 +70,7 @@ export function UpdateReviewModal({ isOpen, onClose, onSave, selectedReview }) {
     const newErrors = {};
     if (!formData.review_text.trim())
       newErrors.review_text = "Review text is required";
-    if (!formData.status) newErrors.email = "Status is required";
+    if (!formData.status) newErrors.status = "Status is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -182,23 +192,31 @@ export function UpdateReviewModal({ isOpen, onClose, onSave, selectedReview }) {
             </div>
 
             {/* Status */}
+
             <div>
-              <select
+              <Select
                 name="status"
                 value={formData.status}
-                onChange={handleChange}
-                className={`w-full bg-[#242424] border ${
-                  errors.status ? "border-red-500" : "border-gray-700"
-                } rounded-md p-3 text-white placeholder-gray-400`}
+                onValueChange={(e) => handleChange(e, "status")}
               >
-                <option value="" disabled>
-                  Select a Status
-                </option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-              </select>
-              {errors.role && (
-                <p className="text-red-500 text-xs mt-1">{errors.role}</p>
+                <SelectTrigger
+                  className={`w-full bg-[#242424] text-base cursor-pointer border ${
+                    errors.status ? "border-red-500" : "border-gray-700"
+                  } rounded-md p-6 text-white placeholder-gray-400`}
+                >
+                  <SelectValue placeholder="Select a Status" />
+                </SelectTrigger>
+                <SelectContent className={"text-white"}>
+                  <SelectItem value="pending" className={"p-4 text-base"}>
+                    Pending
+                  </SelectItem>
+                  <SelectItem value="approved" className={"p-4 text-base"}>
+                    Approved
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.status && (
+                <p className="text-red-500 text-xs mt-1">{errors.status}</p>
               )}
             </div>
 

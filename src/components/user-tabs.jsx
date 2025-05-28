@@ -94,7 +94,7 @@ function UserTabs({
       if (selectedUser) {
         const newData = {
           user_id: selectedUser.id,
-          role_id: selectedUser.role_id,
+          role_id: data.role_id,
           name: data.name,
           email: data.email,
         };

@@ -269,7 +269,7 @@ export const updateUser = async (data, token) => {
     config.headers["x-token"] = token;
   }
 
-  const response = await api.put(`/change-role`, data, config);
+  const response = await api.put(`/update-user-and-role`, data, config);
   return response.data;
 };
 
@@ -315,6 +315,61 @@ export const updateReview = async (id, data, token) => {
   }
 
   const response = await api.put(`/reviews/${id}`, data, config);
+  return response.data;
+};
+
+export const getInventories = async (
+  startsWith,
+  endsWith,
+  token,
+  searchQuery
+) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/inventory?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const createInventory = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/inventory", data, config);
+  return response.data;
+};
+
+export const getInventoryItems = async (id, startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/inventory/items?id=${id}&startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
   return response.data;
 };
 
