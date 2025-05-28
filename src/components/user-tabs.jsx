@@ -67,7 +67,6 @@ function UserTabs({
     }),
     columnHelper.display({
       id: "actions",
-      header: "Actions",
       cell: (info) => (
         <div className="flex justify-end">
           <button

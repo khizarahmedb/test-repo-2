@@ -373,4 +373,40 @@ export const getInventoryItems = async (id, startsWith, endsWith, token) => {
   return response.data;
 };
 
+export const getProducts = async (startsWith, endsWith, token, searchQuery) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/product?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const getProductVariants = async (id, startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/product/variants/${id}?startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
+  return response.data;
+};
+
 export default api;
