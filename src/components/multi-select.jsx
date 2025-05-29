@@ -1,3 +1,4 @@
+import { ChevronDownIcon } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 
 const MultiSelect = ({
@@ -42,7 +43,7 @@ const MultiSelect = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <div
-        className="flex flex-wrap items-center border rounded p-3 cursor-pointer border-gray-700"
+        className="flex flex-wrap items-center bg-[#ffffff0d] border rounded p-3 cursor-pointer border-gray-700"
         onClick={toggleDropdown}
       >
         {selected.length > 0 ? (
@@ -66,7 +67,9 @@ const MultiSelect = ({
         ) : (
           <span className="text-gray-400">{placeholder}</span>
         )}
-        <span className="ml-auto pl-2">{isOpen ? "▲" : "▼"}</span>
+        <span className="ml-auto pl-2">
+          <ChevronDownIcon className="size-6" color="#fff" />
+        </span>
       </div>
 
       {isOpen && (
@@ -75,7 +78,7 @@ const MultiSelect = ({
             <div
               key={option.value}
               onClick={() => handleOptionClick(option)}
-              className={`px-4 py-2 cursor-pointer  ${
+              className={`p-4 cursor-pointer hover:bg-white hover:text-black  ${
                 selected.some((item) => item.value === option.value)
                   ? "bg-gray-100 font-semibold"
                   : "text-white"

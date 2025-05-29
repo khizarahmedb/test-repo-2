@@ -66,18 +66,14 @@ api.interceptors.request.use(
 // Response interceptor for decryption
 api.interceptors.response.use(
   async (response) => {
-    // Assuming encrypted responses will have a specific structure (e.g., iv, tag, encryptedData)
     const { iv, tag, encryptedData } = response.data || {};
 
     if (iv && tag && encryptedData) {
-      // Check if it's an encrypted payload
       try {
-        const decryptedData = await decryptData(response.data);
-        response.data = decryptedData; // Replace with decrypted data
+        const decryptedData = await decryptData(response.data); // <-- This await is correct
+        response.data = decryptedData;
       } catch (error) {
         console.error("Axios Response Decryption Error:", error);
-        // This is crucial: if decryption fails, the data is likely invalid or tampered with.
-        // You should not proceed with potentially malicious or corrupted data.
         throw new Error(
           "Failed to decrypt response data. Data might be invalid or tampered."
         );
@@ -85,9 +81,9 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    // <-- Make the error handler async too!
     // If the error response itself is encrypted, you might need to decrypt it too.
-    // However, usually error responses are sent unencrypted for easier debugging.
     if (
       error.response &&
       error.response.data &&
@@ -97,7 +93,7 @@ api.interceptors.response.use(
     ) {
       try {
         // Attempt to decrypt error data
-        const decryptedErrorData = decryptData(error.response.data);
+        const decryptedErrorData = await decryptData(error.response.data); // <-- ADD await here!
         error.response.data = decryptedErrorData;
       } catch (decryptionError) {
         console.error(
@@ -406,6 +402,72 @@ export const getProductVariants = async (id, startsWith, endsWith, token) => {
     `/product/variants/${id}?startsWith=${startsWith}&endsWith=${endsWith}`,
     config
   );
+  return response.data;
+};
+
+export const getCategories = async (startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/category?startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
+  return response.data;
+};
+
+export const uploadFile = async (formData) => {
+  const response = await axios.post(
+    `https://files.tfgsolutions.pk/api/file-directory/upload`,
+    formData
+  );
+  return response.data;
+};
+
+export const createProduct = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post(`/product`, data, config);
+  return response.data;
+};
+
+export const updateProduct = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  if (token) {
+    config.headers["x-token"] = token;
+
+    const response = await api.put(`/product/${id}`, data, config);
+    return response.data;
+  }
+};
+
+export const fetchProductById = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(`/product/${id}`, config);
   return response.data;
 };
 

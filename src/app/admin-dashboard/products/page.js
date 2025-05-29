@@ -11,22 +11,20 @@ import {
   MoveRight,
   Plus,
   Search,
+  SquarePen,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { createInventory, getInventories, getProducts } from "@/lib/api";
+import { createInventory, getProducts } from "@/lib/api";
 import { toast } from "sonner";
-import dayjs from "dayjs";
-import { AddStockModal } from "@/components/add-stock-modal";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const columnHelper = createColumnHelper();
 
 export default function ProductsPage() {
   const { setRoute } = useNavigationStore();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProducts, setSelectedProducts] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
   const [productsData, setProductsData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +44,15 @@ export default function ProductsPage() {
     }),
     columnHelper.accessor("image_url", {
       header: "Image",
-      cell: (info) => info.getValue(),
+      cell: (info) => (
+        <Image
+          src={info.getValue()}
+          alt={info.row.original.name}
+          width="29"
+          height="29"
+          className="rounded-lg"
+        />
+      ),
     }),
     columnHelper.accessor("description", {
       header: "Description",
@@ -60,7 +66,17 @@ export default function ProductsPage() {
       id: "actions",
 
       cell: (info) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <button
+            className="text-white hover:text-purple-300 text-right"
+            onClick={() =>
+              router.push(
+                `/admin-dashboard/products/${info.row.original.id}/update`
+              )
+            }
+          >
+            <SquarePen size={18} />
+          </button>
           <button
             className="text-white hover:text-purple-300 cursor-pointer"
             onClick={() =>
@@ -147,50 +163,6 @@ export default function ProductsPage() {
     setCurrentPage((prev) => Math.min(lastPageIndex, prev + 1));
   const goToLastPage = () => setCurrentPage(lastPageIndex);
 
-  const onSave = async (data) => {
-    try {
-      // Get token from user store
-      const token = user?.token;
-
-      const response = await createInventory(data, token);
-
-      // Check for API errors using hasError property
-      if (response?.hasError) {
-        const errorMessage = response.message || "Failed to update inventory";
-        toast.error("Failed to update inventory", {
-          description: errorMessage,
-        });
-        throw new Error(errorMessage);
-      }
-
-      toast.success("Inventory updated", {
-        description: `Inventory has been updated successfully.`,
-      });
-
-      // Refresh the user list
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error saving inventory:", error);
-
-      const errorObj = await error?.response?.data;
-      console.log(errorObj);
-
-      // Extract error message from response if available
-      const errorMessage =
-        error.response?.data?.message ||
-        error?.message ||
-        "An unexpected error occurred";
-
-      if (!error.message?.includes("Failed to")) {
-        toast.error("Failed to create inventory", {
-          description: errorMessage,
-        });
-      }
-
-      console.log(error);
-      throw error;
-    }
-  };
   const handleItemsPerPageChange = (newItemsPerPage) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(0); // Reset to first page when changing items per page
@@ -227,7 +199,7 @@ export default function ProductsPage() {
           <button
             className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
             onClick={() => {
-              setIsOpen(true);
+              router.push("/admin-dashboard/products/create");
             }}
           >
             <div className="border-white border-2 rounded-md p-[2px]">
@@ -329,11 +301,6 @@ export default function ProductsPage() {
           </>
         )}
       </div>
-      <AddStockModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        onSave={onSave}
-      />
     </div>
   );
 }

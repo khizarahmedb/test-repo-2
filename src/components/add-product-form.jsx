@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -13,8 +13,16 @@ import { Button } from "./ui/button";
 import { Plus, Upload, X } from "lucide-react";
 import { Checkbox } from "./ui/checkbox";
 import MultiSelect from "./multi-select";
+import { createProduct, uploadFile } from "@/lib/api";
+import { toast } from "sonner";
 
-const ProductForm = () => {
+const ProductForm = ({
+  stockOptions,
+  categoryOptions,
+  onFormSubmit,
+  productData = null,
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     stock: "",
     productName: "",
@@ -25,6 +33,7 @@ const ProductForm = () => {
     approveProduct: false,
     variants: [
       {
+        id: null,
         type: "",
         quantity: "",
         unitPrice: "",
@@ -39,35 +48,14 @@ const ProductForm = () => {
 
   const [errors, setErrors] = useState({});
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [openDropdowns, setOpenDropdowns] = useState({});
-
-  // Sample data
-  const stockOptions = [
-    { id: 1, name: "Electronics" },
-    { id: 2, name: "Clothing" },
-    { id: 3, name: "Books" },
-    { id: 4, name: "Home & Garden" },
-  ];
-
-  const categoryOptions = [
-    { id: 1, name: "Electronics" },
-    { id: 2, name: "Clothing" },
-    { id: 3, name: "Books" },
-    { id: 4, name: "Home & Garden" },
-  ];
+  const [file, setFile] = useState(null);
 
   const availabilityOptions = [
-    { id: 1, name: "In Stock" },
-    { id: 2, name: "Out of Stock" },
-    { id: 3, name: "Pre-order" },
+    { id: "Available", name: "Available" },
+    { id: "Not Available", name: "Not Available" },
   ];
 
-  const deliveryTimeOptions = [
-    { id: 1, name: "1-2 Days" },
-    { id: 2, name: "3-5 Days" },
-    { id: 3, name: "1 Week" },
-    { id: 4, name: "2 Weeks" },
-  ];
+  const deliveryTimeOptions = [{ id: "Instant", name: "Instant" }];
 
   const validateForm = () => {
     const newErrors = {};
@@ -114,12 +102,6 @@ const ProductForm = () => {
         [field]: undefined,
       }));
     }
-
-    // Close dropdown
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [field]: false,
-    }));
   };
 
   const handleVariantSelectChange = (index, field, value) => {
@@ -142,24 +124,6 @@ const ProductForm = () => {
         [errorKey]: undefined,
       }));
     }
-
-    // Close dropdown
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [`variant_${index}_${field}`]: false,
-    }));
-  };
-
-  const toggleDropdown = (key) => {
-    setOpenDropdowns((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  const getSelectedOptionName = (options, value) => {
-    const option = options.find((opt) => String(opt.id) === String(value));
-    return option ? option.name : "";
   };
 
   const handleInputChange = (field, value) => {
@@ -205,6 +169,7 @@ const ProductForm = () => {
       variants: [
         ...prev.variants,
         {
+          id: null,
           type: "",
           quantity: "",
           unitPrice: "",
@@ -229,6 +194,7 @@ const ProductForm = () => {
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
+    setFile(event.target.files[0]);
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -238,11 +204,64 @@ const ProductForm = () => {
     }
   };
 
-  const handleSave = () => {
+  const uploadImage = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("directory", "uploads/invader-products");
+      formData.append("file", file);
+      const image = await uploadFile(formData);
+      return { data: image, error: null };
+    } catch (error) {
+      return { error, data: null };
+    }
+  };
+  const handleSave = async () => {
     if (validateForm()) {
+      setIsLoading(true);
       console.log("Form data:", formData);
       console.log("Uploaded image:", uploadedImage);
-      alert("Product saved successfully!");
+
+      let imageUrl;
+      // upload image
+      if (file) {
+        const res = await uploadImage(file);
+        if (res.error) {
+          toast.error("Failed to upload image", {
+            description: res.error.message,
+          });
+          return;
+        }
+        imageUrl = `https://files.tfgsolutions.pk/public/${res.data.filePath}`;
+      } else {
+        imageUrl = productData?.image_url;
+      }
+
+      // send form data
+      const data = {
+        stock_id: +formData.stock,
+        name: formData.productName,
+        description: formData.description,
+        remove_sold_stock: formData.removeSoldStock,
+        image_url: imageUrl,
+        categories: formData.category.map((item) => +item.value),
+        coupon_activation: formData.couponActivation,
+        approve_product: formData.approveProduct,
+        variants: formData.variants.map((item) => {
+          return {
+            name: item.type,
+            quantity: +item.quantity,
+            price: +item.unitPrice,
+            buying_price_per_unit: +item.buyingUnitPrice,
+            out_of_stock_alert_limit: +item.outOfStockLimit,
+            low_stock_alert_limit: +item.lowStockLimit,
+            availability: item.availability,
+            delivery_time: item.deliveryTime,
+          };
+        }),
+      };
+
+      await onFormSubmit(data);
+      setIsLoading(false);
     }
   };
 
@@ -272,6 +291,34 @@ const ProductForm = () => {
     setErrors({});
   };
 
+  useEffect(() => {
+    if (productData) {
+      setFormData({
+        stock: String(productData.stock_id),
+        productName: productData.name,
+        category: [],
+        description: productData.description,
+        removeSoldStock: productData.remove_sold_stock ? true : false,
+        couponActivation: productData.apply_coupon ? true : false,
+        approveProduct: productData.is_approved ? true : false,
+        variants: productData.variants.map((item) => {
+          return {
+            id: item.id,
+            type: item.name,
+            quantity: String(item.quantity),
+            unitPrice: String(item.price),
+            buyingUnitPrice: String(item.buying_price_per_unit),
+            lowStockLimit: String(item.low_stock_alert_limit),
+            outOfStockLimit: String(item.out_of_stock_alert_limit),
+            availability: item.availability,
+            deliveryTime: item.delivery_time,
+          };
+        }),
+      });
+      setUploadedImage(productData?.image_url);
+    }
+  }, [productData]);
+
   return (
     <div>
       <div className="bg-[#0000000F] rounded-lg p-6 space-y-6">
@@ -283,12 +330,12 @@ const ProductForm = () => {
               name="stock"
               value={formData.stock}
               onValueChange={(value) => handleSelectChange(value, "stock")}
+              disabled={productData !== null}
             >
               <SelectTrigger
-                className={`w-full bg-[#242424] text-base cursor-pointer border ${
+                className={` w-full bg-[#242424] text-base cursor-pointer border ${
                   errors.stock ? "border-red-500" : "border-gray-700"
                 } rounded-md p-6 text-white placeholder-gray-400`}
-                onClick={() => toggleDropdown("stock")}
               >
                 <SelectValue placeholder="Select Stock" />
               </SelectTrigger>
@@ -326,10 +373,7 @@ const ProductForm = () => {
           {/* Category */}
           <div className="space-y-2">
             <MultiSelect
-              options={[
-                { label: "React", value: "1" },
-                { label: "Node js", value: "2" },
-              ]}
+              options={categoryOptions}
               onChange={(values) => handleSelectChange(values, "category")}
               placeholder="Category"
               selectedValues={formData.category}
@@ -489,11 +533,13 @@ const ProductForm = () => {
                 <div className="space-y-1">
                   <Input
                     placeholder="Quantity"
-                    type="number"
                     value={variant.quantity}
-                    onChange={(e) =>
-                      handleVariantChange(index, "quantity", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) {
+                        handleVariantChange(index, "quantity", value);
+                      }
+                    }}
                     error={errors[`variant_${index}_quantity`]}
                     className={"bg-[#242424] p-6 border-gray-700 text-white"}
                   />
@@ -506,12 +552,14 @@ const ProductForm = () => {
                 <div className="space-y-1">
                   <Input
                     placeholder="Unit Price"
-                    type="number"
                     step="0.01"
                     value={variant.unitPrice}
-                    onChange={(e) =>
-                      handleVariantChange(index, "unitPrice", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) {
+                        handleVariantChange(index, "unitPrice", value);
+                      }
+                    }}
                     error={errors[`variant_${index}_unitPrice`]}
                     className={"bg-[#242424] p-6 border-gray-700 text-white"}
                   />
@@ -524,16 +572,14 @@ const ProductForm = () => {
                 <div className="space-y-1">
                   <Input
                     placeholder="Buying Unit Price"
-                    type="number"
                     step="0.01"
                     value={variant.buyingUnitPrice}
-                    onChange={(e) =>
-                      handleVariantChange(
-                        index,
-                        "buyingUnitPrice",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) {
+                        handleVariantChange(index, "buyingUnitPrice", value);
+                      }
+                    }}
                     error={errors[`variant_${index}_buyingUnitPrice`]}
                     className={"bg-[#242424] p-6 border-gray-700 text-white"}
                   />
@@ -550,30 +596,26 @@ const ProductForm = () => {
                 <div className="space-y-1">
                   <Input
                     placeholder="Low Stock Limit"
-                    type="number"
                     value={variant.lowStockLimit}
-                    onChange={(e) =>
-                      handleVariantChange(
-                        index,
-                        "lowStockLimit",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) {
+                        handleVariantChange(index, "lowStockLimit", value);
+                      }
+                    }}
                     className={"bg-[#242424] p-6 border-gray-700 text-white"}
                   />
                 </div>
                 <div className="space-y-1">
                   <Input
                     placeholder="Out of Stock Limit"
-                    type="number"
                     value={variant.outOfStockLimit}
-                    onChange={(e) =>
-                      handleVariantChange(
-                        index,
-                        "outOfStockLimit",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^\d*$/.test(value)) {
+                        handleVariantChange(index, "outOfStockLimit", value);
+                      }
+                    }}
                     className={"bg-[#242424] p-6 border-gray-700 text-white"}
                   />
                 </div>
@@ -591,9 +633,6 @@ const ProductForm = () => {
                           ? "border-red-500"
                           : "border-gray-700"
                       } rounded-md p-6 text-white placeholder-gray-400`}
-                      onClick={() =>
-                        toggleDropdown(`variant_${index}_availability`)
-                      }
                     >
                       <SelectValue placeholder="Availability" />
                     </SelectTrigger>
@@ -636,9 +675,6 @@ const ProductForm = () => {
                           ? "border-red-500"
                           : "border-gray-700"
                       } rounded-md p-6 text-white placeholder-gray-400`}
-                      onClick={() =>
-                        toggleDropdown(`variant_${index}_deliveryTime`)
-                      }
                     >
                       <SelectValue placeholder="Delivery Time" />
                     </SelectTrigger>
@@ -673,15 +709,18 @@ const ProductForm = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-4 pt-6">
-          <Button variant="outline" onClick={handleCancel} className="px-8">
+        <div className="grid grid-cols-2 space-x-4 pt-6">
+          <Button
+            onClick={handleCancel}
+            className="px-8 btn-gradient-cancel h-[44px] text-white border-none"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            className="px-8 bg-purple-600 hover:bg-purple-700"
+            className="px-8 btn-gradient-save h-[44px] text-white border-none"
           >
-            Save
+            {isLoading ? "Saving" : "Save"}
           </Button>
         </div>
       </div>
