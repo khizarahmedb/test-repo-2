@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "./ui/select";
 
-export function AddStockModal({ isOpen, onClose, onSave }) {
+export function AddStockModal({ isOpen, onClose, onSave, selectedInventory }) {
   const { user } = useUserStore();
   const [formData, setFormData] = useState({
     items: "",
@@ -90,13 +90,28 @@ export function AddStockModal({ isOpen, onClose, onSave }) {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (selectedInventory) {
+      console.log(selectedInventory.delimiter);
+
+      setFormData({
+        stock_name: selectedInventory.name,
+        delimiter: `${selectedInventory.delimiter}`,
+        items: "",
+      });
+    }
+  }, [selectedInventory]);
+  console.log(formData);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0  bg-black/50 flex items-center justify-center z-50">
       <div className="bg-[#161616] rounded-xl w-full max-w-[742px] p-6 border border-purple-600">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-[2rem] font-bold text-white">Add Stock</h2>
+          <h2 className="text-[2rem] font-bold text-white">
+            {selectedInventory ? "Restock Inventory" : "Add Stock"}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -108,6 +123,7 @@ export function AddStockModal({ isOpen, onClose, onSave }) {
                 value={formData.stock_name}
                 onChange={handleChange}
                 placeholder="Stock Name"
+                disabled={selectedInventory !== null}
                 className={`w-full bg-[#242424] border ${
                   errors.stock_name ? "border-red-500" : "border-gray-700"
                 } rounded-md p-3 text-white placeholder-gray-400`}

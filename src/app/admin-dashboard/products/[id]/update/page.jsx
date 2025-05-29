@@ -185,7 +185,7 @@ const UpdateProductPage = () => {
       } else {
         console.log(error);
 
-        toast.error("Failed to create product", error.message);
+        toast.error("Failed to update product", error.message);
       }
     }
   };

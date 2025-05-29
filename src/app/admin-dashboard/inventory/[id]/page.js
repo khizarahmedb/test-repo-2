@@ -1,18 +1,24 @@
 "use client";
-import { getInventoryItems } from "@/lib/api";
+import { CustomTable } from "@/components/custom-table";
+import { EditEntryModal } from "@/components/edit-entry-modal";
+import { getInventoryItems, updateEntry } from "@/lib/api";
 import { useUserStore } from "@/lib/store";
+import { createColumnHelper } from "@tanstack/react-table";
 import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  SquarePen,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-
+const columnHelper = createColumnHelper();
 const InventoryItemsPage = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -27,6 +33,33 @@ const InventoryItemsPage = () => {
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
+
+  const columns = [
+    columnHelper.accessor("id", {
+      header: "ID",
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor("value", {
+      header: "Item",
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.display({
+      id: "actions",
+      cell: (info) => (
+        <div className="flex justify-end">
+          <button
+            className="text-white hover:text-purple-300 cursor-pointer"
+            onClick={() => {
+              setSelectedEntry(info.row.original);
+              setIsOpen(true);
+            }}
+          >
+            <SquarePen size={18} />
+          </button>
+        </div>
+      ),
+    }),
+  ];
 
   const goToFirstPage = () => setCurrentPage(0);
 
@@ -98,6 +131,55 @@ const InventoryItemsPage = () => {
     setCurrentPage(0); // Reset to first page when changing items per page
   };
 
+  const onSave = async (data) => {
+    try {
+      // Get token from user store
+      const token = user?.token;
+
+      const response = await updateEntry(
+        selectedEntry.id,
+        { name: data.entry },
+        token
+      );
+
+      // Check for API errors using hasError property
+      if (response?.hasError) {
+        const errorMessage = response.message || "Failed to update entry";
+        toast.error("Failed to update entry", {
+          description: errorMessage,
+        });
+        throw new Error(errorMessage);
+      }
+
+      toast.success("Entry updated", {
+        description: `Entry has been updated successfully.`,
+      });
+
+      // Refresh the user list
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error saving entry:", error);
+
+      const errorObj = await error?.response?.data;
+      console.log(errorObj);
+
+      // Extract error message from response if available
+      const errorMessage =
+        error.response?.data?.message ||
+        error?.message ||
+        "An unexpected error occurred";
+
+      if (!error.message?.includes("Failed to")) {
+        toast.error("Failed to create entry", {
+          description: errorMessage,
+        });
+      }
+
+      console.log(error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-4 w-full">
       <div className="flex items-center gap-4">
@@ -130,10 +212,8 @@ const InventoryItemsPage = () => {
           </div>
         ) : (
           <>
-            <div className="text-[#FFFFFF8F] flex-grow">
-              {inventoryItems.map((item) => {
-                return <p key={item.id}>{item.value}</p>;
-              })}
+            <div className="flex-1 overflow-auto">
+              <CustomTable columns={columns} data={inventoryItems} />
             </div>
             {totalCount > 0 && (
               <div className="flex items-center justify-between mt-4 text-white">
@@ -206,6 +286,12 @@ const InventoryItemsPage = () => {
           </>
         )}
       </div>
+      <EditEntryModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onSave={onSave}
+        selectedEntry={selectedEntry}
+      />
     </div>
   );
 };

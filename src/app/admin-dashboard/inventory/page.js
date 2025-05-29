@@ -11,9 +11,10 @@ import {
   MoveRight,
   Plus,
   Search,
+  SquarePen,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { createInventory, getInventories } from "@/lib/api";
+import { createInventory, getInventories, restockInventory } from "@/lib/api";
 import { toast } from "sonner";
 import dayjs from "dayjs";
 import { AddStockModal } from "@/components/add-stock-modal";
@@ -77,7 +78,16 @@ export default function InventoryPage() {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          <button
+            className="text-white hover:text-purple-300 cursor-pointer"
+            onClick={() => {
+              setSelectedInventory(info.row.original);
+              setIsOpen(true);
+            }}
+          >
+            <SquarePen size={18} />
+          </button>
           <button
             className="text-white hover:text-purple-300 cursor-pointer"
             onClick={() =>
@@ -169,20 +179,42 @@ export default function InventoryPage() {
       // Get token from user store
       const token = user?.token;
 
-      const response = await createInventory(data, token);
+      if (selectedInventory) {
+        const response = await restockInventory(
+          selectedInventory.id,
+          data,
+          token
+        );
 
-      // Check for API errors using hasError property
-      if (response?.hasError) {
-        const errorMessage = response.message || "Failed to update inventory";
-        toast.error("Failed to update inventory", {
-          description: errorMessage,
+        // Check for API errors using hasError property
+        if (response?.hasError) {
+          const errorMessage =
+            response.message || "Failed to restock inventory";
+          toast.error("Failed to restock inventory", {
+            description: errorMessage,
+          });
+          throw new Error(errorMessage);
+        }
+
+        toast.success("Inventory updated", {
+          description: `Inventory has been updated successfully.`,
         });
-        throw new Error(errorMessage);
-      }
+      } else {
+        const response = await createInventory(data, token);
 
-      toast.success("Inventory updated", {
-        description: `Inventory has been updated successfully.`,
-      });
+        // Check for API errors using hasError property
+        if (response?.hasError) {
+          const errorMessage = response.message || "Failed to update inventory";
+          toast.error("Failed to update inventory", {
+            description: errorMessage,
+          });
+          throw new Error(errorMessage);
+        }
+
+        toast.success("Inventory updated", {
+          description: `Inventory has been updated successfully.`,
+        });
+      }
 
       // Refresh the user list
       setRefreshTrigger((prev) => prev + 1);
@@ -248,6 +280,7 @@ export default function InventoryPage() {
             className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
             onClick={() => {
               setIsOpen(true);
+              setSelectedInventory(null);
             }}
           >
             <div className="border-white border-2 rounded-md p-[2px]">
@@ -353,6 +386,7 @@ export default function InventoryPage() {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         onSave={onSave}
+        selectedInventory={selectedInventory}
       />
     </div>
   );

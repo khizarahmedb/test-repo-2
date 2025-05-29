@@ -327,13 +327,18 @@ const CreateCategoryPage = () => {
       </div>
       <div className="relative rounded-lg border-2 mt-4 p-4 border-purple-600 h-[84vh] flex flex-col overflow-y-auto">
         <div>
-          <Input
-            placeholder="Category Name"
-            value={formData.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            error={errors.name}
-            className={"bg-[#242424] p-6 border-gray-700 text-white"}
-          />
+          <div>
+            <Input
+              placeholder="Category Name"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              error={errors.name}
+              className={"bg-[#242424] p-6 border-gray-700 text-white"}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
+          </div>
           <h2 className="text-lg font-medium my-3 text-white">
             Priority Products
           </h2>

@@ -297,10 +297,12 @@ const ProductForm = ({
       setFormData({
         stock: String(productData.stock_id),
         productName: productData.name,
-        category: productData.categories.map((item) => ({
-          label: item.name,
-          value: item.id,
-        })),
+        category: productData?.categories?.length
+          ? productData.categories.map((item) => ({
+              label: item.name,
+              value: item.id,
+            }))
+          : [],
         description: productData.description,
         removeSoldStock: productData.remove_sold_stock ? true : false,
         couponActivation: productData.apply_coupon ? true : false,

@@ -513,4 +513,32 @@ export const updateCategory = async (id, data, token) => {
   return response.data;
 };
 
+export const updateEntry = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/inventory/update-item/${id}`, data, config);
+  return response.data;
+};
+
+export const restockInventory = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/inventory/add-items/${id}`, data, config);
+  return response.data;
+};
+
 export default api;
