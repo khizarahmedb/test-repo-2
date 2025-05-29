@@ -8,25 +8,24 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  MoveRight,
   Plus,
-  Search,
   SquarePen,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { createInventory, getProducts } from "@/lib/api";
+import { getCategories, getReviews, updateReview } from "@/lib/api";
+import { UpdateReviewModal } from "@/components/update-review-modal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 const columnHelper = createColumnHelper();
 
-export default function ProductsPage() {
+export default function CategoryPage() {
   const { setRoute } = useNavigationStore();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
-  const [productsData, setProductsData] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -42,55 +41,23 @@ export default function ProductsPage() {
       header: "Name",
       cell: (info) => info.getValue(),
     }),
-    columnHelper.accessor("image_url", {
-      header: "Image",
-      cell: (info) => {
-        if (!info.getValue()) {
-          return info.getValue();
-        }
-        return (
-          <Image
-            src={info.getValue()}
-            alt={info.row.original.name}
-            width="29"
-            height="29"
-            className="rounded-lg"
-          />
-        );
-      },
-    }),
-    columnHelper.accessor("description", {
-      header: "Description",
-      cell: (info) => info.getValue(),
-    }),
-    columnHelper.accessor("variants_count", {
-      header: "Variants",
+    columnHelper.accessor("product_count", {
+      header: "Products",
       cell: (info) => info.getValue(),
     }),
     columnHelper.display({
       id: "actions",
-
       cell: (info) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end">
           <button
-            className="text-white hover:text-purple-300 text-right"
+            className="text-white hover:text-purple-300"
             onClick={() =>
               router.push(
-                `/admin-dashboard/products/${info.row.original.id}/update`
+                `/admin-dashboard/categories/${info.row.original.id}/update`
               )
             }
           >
             <SquarePen size={18} />
-          </button>
-          <button
-            className="text-white hover:text-purple-300 cursor-pointer"
-            onClick={() =>
-              router.push(
-                `/admin-dashboard/products/${info.row.original.id}/variants?title=${info.row.original.name}`
-              )
-            }
-          >
-            <MoveRight size={18} />
           </button>
         </div>
       ),
@@ -98,11 +65,11 @@ export default function ProductsPage() {
   ];
 
   useEffect(() => {
-    setRoute("/admin-dashboard/inventory");
+    setRoute("/admin-dashboard/reviews");
   }, [setRoute]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchCategories = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -113,22 +80,17 @@ export default function ProductsPage() {
         const token = user?.token;
 
         // Call the API service function with pagination parameters
-        const response = await getProducts(
-          startsWith,
-          endsWith,
-          token,
-          searchQuery
-        );
-        console.log("Products API Response:", response);
+        const response = await getCategories(startsWith, endsWith, token);
+        console.log("Categories API Response:", response);
 
         // Check for API errors using hasError property
         if (response?.hasError) {
           const errorMessage =
-            response.message || "Failed to load products. Please try again.";
+            response.message || "Failed to load categories. Please try again.";
           setError(errorMessage);
-          setProductsData([]);
+          setCategoryData([]);
           setTotalCount(0);
-          toast.error("Failed to load products", {
+          toast.error("Failed to load categories", {
             description: errorMessage,
           });
           return;
@@ -136,27 +98,27 @@ export default function ProductsPage() {
 
         // Update state with the actual API data
         if (response && response.body && response.body.data) {
-          setProductsData(response.body.data);
+          setCategoryData(response.body.data);
           setTotalCount(response.body.totalcount || 0);
         } else {
-          setProductsData([]);
+          setCategoryData([]);
           setTotalCount(0);
         }
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching categories:", error);
         const errorMessage =
           error.response?.data?.message ||
-          "Failed to load products. Please try again.";
+          "Failed to load categories. Please try again.";
         setError(errorMessage);
-        setProductsData([]);
-        toast.error("Failed to load products", {
+        setCategoryData([]);
+        toast.error("Failed to load categories", {
           description: errorMessage,
         });
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchCategories();
   }, [currentPage, user, itemsPerPage, refreshTrigger]);
 
   // Pagination handlers
@@ -167,57 +129,33 @@ export default function ProductsPage() {
   const goToNextPage = () =>
     setCurrentPage((prev) => Math.min(lastPageIndex, prev + 1));
   const goToLastPage = () => setCurrentPage(lastPageIndex);
-
   const handleItemsPerPageChange = (newItemsPerPage) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(0); // Reset to first page when changing items per page
   };
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setCurrentPage(0);
-      setRefreshTrigger((prev) => prev + 1);
-    }, 300); // Debounce delay (in ms)
-
-    return () => {
-      clearTimeout(handler); // Clean up previous timeout if input changes again
-    };
-  }, [searchQuery]);
   return (
     <div className="space-y-4 w-full">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Products</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-white">Categories</h1>
         <div className="flex items-center gap-[1.0625rem]">
-          <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
-            <Search size={25} color="#FFFFFF" className="ml-6" />
-            <input
-              type="text"
-              className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
-              placeholder="Search Name"
-              value={searchQuery}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSearchQuery(value);
-              }}
-            />
-          </div>
           <button
             className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
             onClick={() => {
-              router.push("/admin-dashboard/products/create");
+              router.push("/admin-dashboard/categories/create");
             }}
           >
             <div className="border-white border-2 rounded-md p-[2px]">
               <Plus size={18} />
             </div>
-            Add Product
+            Add Category
           </button>
         </div>
       </div>
       <div className="rounded-lg border-2 mt-4 p-4 border-purple-600 h-[84vh] flex flex-col">
         {loading ? (
           <div className="flex items-center justify-center flex-1">
-            <p className="text-white">Loading products...</p>
+            <p className="text-white">Loading categories...</p>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center flex-1">
@@ -232,7 +170,7 @@ export default function ProductsPage() {
         ) : (
           <>
             <div className="flex-1 overflow-auto">
-              <CustomTable columns={columns} data={productsData} />
+              <CustomTable columns={columns} data={categoryData} />
             </div>
             {/* Pagination with Items Per Page Selector */}
             {totalCount > 0 && (

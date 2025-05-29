@@ -248,6 +248,7 @@ const ProductForm = ({
         approve_product: formData.approveProduct,
         variants: formData.variants.map((item) => {
           return {
+            id: item.id,
             name: item.type,
             quantity: +item.quantity,
             price: +item.unitPrice,
@@ -269,7 +270,7 @@ const ProductForm = ({
     setFormData({
       stock: "",
       productName: "",
-      category: "",
+      category: [],
       description: "",
       removeSoldStock: false,
       couponActivation: false,
@@ -296,24 +297,29 @@ const ProductForm = ({
       setFormData({
         stock: String(productData.stock_id),
         productName: productData.name,
-        category: [],
+        category: productData.categories.map((item) => ({
+          label: item.name,
+          value: item.id,
+        })),
         description: productData.description,
         removeSoldStock: productData.remove_sold_stock ? true : false,
         couponActivation: productData.apply_coupon ? true : false,
         approveProduct: productData.is_approved ? true : false,
-        variants: productData.variants.map((item) => {
-          return {
-            id: item.id,
-            type: item.name,
-            quantity: String(item.quantity),
-            unitPrice: String(item.price),
-            buyingUnitPrice: String(item.buying_price_per_unit),
-            lowStockLimit: String(item.low_stock_alert_limit),
-            outOfStockLimit: String(item.out_of_stock_alert_limit),
-            availability: item.availability,
-            deliveryTime: item.delivery_time,
-          };
-        }),
+        variants: productData?.variants?.length
+          ? productData?.variants?.map((item) => {
+              return {
+                id: item.id,
+                type: item.name,
+                quantity: String(item.quantity),
+                unitPrice: String(item.price),
+                buyingUnitPrice: String(item.buying_price_per_unit),
+                lowStockLimit: String(item.low_stock_alert_limit),
+                outOfStockLimit: String(item.out_of_stock_alert_limit),
+                availability: item.availability,
+                deliveryTime: item.delivery_time,
+              };
+            })
+          : [],
       });
       setUploadedImage(productData?.image_url);
     }
@@ -718,7 +724,10 @@ const ProductForm = ({
           </Button>
           <Button
             onClick={handleSave}
-            className="px-8 btn-gradient-save h-[44px] text-white border-none"
+            className={`px-8 btn-gradient-save h-[44px] text-white border-none ${
+              isLoading ? "!cursor-not-allowed" : ""
+            }`}
+            disabled={isLoading}
           >
             {isLoading ? "Saving" : "Save"}
           </Button>

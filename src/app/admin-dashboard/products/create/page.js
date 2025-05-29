@@ -96,6 +96,8 @@ const CreateProductPage = () => {
     try {
       const token = user?.token;
       await createProduct(data, token);
+      toast.success("Product Created Successfully");
+      router.push("/admin-dashboard/products");
     } catch (error) {
       if (error.status === 400) {
         const errorObj = error.response.data;

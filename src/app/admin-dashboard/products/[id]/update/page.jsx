@@ -133,7 +133,20 @@ const UpdateProductPage = () => {
       if (variant.id === null || variant.id === undefined) {
         newVariants.push(variant);
       } else {
-        updatedVariants.push(variant);
+        const apiVariant = productData.variants.find(
+          (item) => item.id === variant.id
+        );
+
+        if (!apiVariant) return; // skip if not found in API
+
+        // Compare fields
+        const isModified = Object.keys(variant).some((key) => {
+          return variant[key] !== apiVariant[key];
+        });
+
+        if (isModified) {
+          updatedVariants.push(variant);
+        }
       }
     });
 
@@ -159,8 +172,12 @@ const UpdateProductPage = () => {
       const token = user?.token;
 
       const updatedData = processProductData(data);
+      console.log("UPDATED DATA", updatedData);
 
       await updateProduct(productData.id, updatedData, token);
+
+      toast.success("Product Updated Successfully");
+      router.push("/admin-dashboard/products");
     } catch (error) {
       if (error.status === 400) {
         const errorObj = error.response.data;

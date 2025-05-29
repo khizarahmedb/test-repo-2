@@ -471,4 +471,46 @@ export const fetchProductById = async (id, token) => {
   return response.data;
 };
 
+export const createCategory = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post(`/category`, data, config);
+  return response.data;
+};
+
+export const getCategoryById = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(`/category/${id}`, config);
+  return response.data;
+};
+
+export const updateCategory = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/category/${id}`, data, config);
+  return response.data;
+};
+
 export default api;

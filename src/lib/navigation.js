@@ -28,6 +28,11 @@ export const adminNavItems = [
     icon: <ShoppingBag className="h-5 w-5" />,
   },
   {
+    label: "Categories",
+    href: "/admin-dashboard/categories",
+    icon: <ShoppingBag className="h-5 w-5" />,
+  },
+  {
     label: "Invoices",
     href: "/admin-dashboard/invoices",
     icon: <FileText className="h-5 w-5" />,
