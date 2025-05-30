@@ -83,6 +83,10 @@ export function ReplaceProductModal({
       newErrors.originalProduct = "Original product is required";
     if (!formData.productToBeReplaced)
       newErrors.productToBeReplaced = "Product to be replaced is required";
+    if (!formData.originalProductVariant)
+      newErrors.originalProductVariant = "Original product variant is required";
+    if (!formData.replacedProductVariant)
+      newErrors.replacedProductVariant = "Replace product variant is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -267,6 +271,7 @@ export function ReplaceProductModal({
               value={formData.originalProduct}
               placeholder="Select Original Product"
               onChange={(e) => handleChange(e, "originalProduct")}
+              error={errors.originalProduct}
             />
 
             <InputSelect
@@ -277,6 +282,7 @@ export function ReplaceProductModal({
               placeholder="Select Original Product Variant"
               onChange={(e) => handleChange(e, "originalProductVariant")}
               disabled={formData.originalProduct === null}
+              error={errors.originalProductVariant}
             />
 
             <InputSelect
@@ -286,6 +292,7 @@ export function ReplaceProductModal({
               value={formData.productToBeReplaced}
               placeholder="Product to be replaced with (Type to search)"
               onChange={(e) => handleChange(e, "productToBeReplaced")}
+              error={errors.productToBeReplaced}
             />
 
             <InputSelect
@@ -296,6 +303,7 @@ export function ReplaceProductModal({
               placeholder="Replaced Product Variant"
               onChange={(e) => handleChange(e, "replacedProductVariant")}
               disabled={formData.productToBeReplaced === null}
+              error={errors.replacedProductVariant}
             />
 
             {/* Form Error */}

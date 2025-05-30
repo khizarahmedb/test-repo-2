@@ -12,8 +12,9 @@ export function InputSelect({
   onChange,
   placeholder = "Select...",
   debounceTime = 300,
-  enableSearch = true, // Toggles search functionality
-  disabled = false, // Toggles disabled state
+  enableSearch = true,
+  disabled = false,
+  error,
 }) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,6 +128,7 @@ export function InputSelect({
               !enableSearch || disabled ? "cursor-pointer" : "cursor-text"
             } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
           />
+          {error && <p className="text-red-500 text-xs">{error}</p>}
           <div className="absolute right-6 top-[50%] -translate-y-[50%] flex items-center gap-1">
             {value && !disabled && (
               <X
