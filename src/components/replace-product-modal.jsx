@@ -136,8 +136,8 @@ export function ReplaceProductModal({
   useEffect(() => {
     if (selectedTicket) {
       setFormData({
-        orderId: "",
-        customerEmail: "",
+        orderId: selectedTicket.order_id,
+        customerEmail: selectedTicket.customer_email,
         originalProduct: null,
         originalProductVariant: null,
         productToBeReplaced: null,
