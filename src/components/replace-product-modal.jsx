@@ -87,6 +87,7 @@ export function ReplaceProductModal({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  console.log(formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -105,8 +106,8 @@ export function ReplaceProductModal({
         customer_email: formData.customerEmail,
         original_product_id: formData.originalProduct.id,
         replacement_product_id: formData.productToBeReplaced.id,
-        original_variant_id: formData.originalProduct.variantId,
-        replacement_variant_id: formData.productToBeReplaced.variantId,
+        original_variant_id: formData.originalProductVariant.id,
+        replacement_variant_id: formData.replacedProductVariant.id,
       };
       console.log(apiData);
 
@@ -121,7 +122,20 @@ export function ReplaceProductModal({
   };
 
   useEffect(() => {
-    if (!isOpen) {
+    if (selectedTicket) {
+      setFormData({
+        orderId: String(selectedTicket.order_id),
+        customerEmail: selectedTicket.customer_email,
+        originalProduct: {
+          id: selectedTicket.product_id,
+          name: selectedTicket.product_name,
+        },
+        originalProductVariant: {
+          id: selectedTicket.variant_id,
+          name: selectedTicket.variant_name,
+        },
+      });
+    } else {
       setFormData({
         orderId: "",
         customerEmail: "",
@@ -131,20 +145,7 @@ export function ReplaceProductModal({
         replacedProductVariant: null,
       });
     }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (selectedTicket) {
-      setFormData({
-        orderId: selectedTicket.order_id,
-        customerEmail: selectedTicket.customer_email,
-        originalProduct: null,
-        originalProductVariant: null,
-        productToBeReplaced: null,
-        replacedProductVariant: null,
-      });
-    }
-  }, [selectedTicket]);
+  }, [selectedTicket, isOpen]);
 
   useEffect(() => {
     if (isOpen) {

@@ -91,6 +91,17 @@ export default function TicketsPage() {
       id: "actions",
       cell: (info) => (
         <div className="flex justify-end gap-4">
+          {/* {info.row.original.status !== "Resolved" && (
+            <button
+              className="text-white hover:text-purple-300 cursor-pointer"
+              onClick={() => {
+                setSelectedTicket(info.row.original);
+                setIsOpen(true);
+              }}
+            >
+              <Repeat size={18} />
+            </button>
+          )} */}
           <button
             className="text-white hover:text-purple-300 cursor-pointer"
             onClick={() => {
@@ -178,41 +189,25 @@ export default function TicketsPage() {
 
   const onSave = async (data) => {
     try {
+      console.log(data);
+
       // Get token from user store
       const token = user?.token;
 
-      if (selectedTicket) {
-        const response = await restockInventory(selectedTicket.id, data, token);
+      const response = await replaceProduct(data, token);
 
-        // Check for API errors using hasError property
-        if (response?.hasError) {
-          const errorMessage =
-            response.message || "Failed to restock inventory";
-          toast.error("Failed to restock inventory", {
-            description: errorMessage,
-          });
-          throw new Error(errorMessage);
-        }
-
-        toast.success("Inventory updated", {
-          description: `Inventory has been updated successfully.`,
+      // Check for API errors using hasError property
+      if (response?.hasError) {
+        const errorMessage = response.message || "Failed to update ticket";
+        toast.error("Failed to update ticket", {
+          description: errorMessage,
         });
-      } else {
-        const response = await replaceProduct(data, token);
-
-        // Check for API errors using hasError property
-        if (response?.hasError) {
-          const errorMessage = response.message || "Failed to update ticket";
-          toast.error("Failed to update ticket", {
-            description: errorMessage,
-          });
-          throw new Error(errorMessage);
-        }
-
-        toast.success("Product Replaced", {
-          description: `Product has successfully been replaced.`,
-        });
+        throw new Error(errorMessage);
       }
+
+      toast.success("Product Replaced", {
+        description: `Product has successfully been replaced.`,
+      });
 
       // Refresh the user list
       setRefreshTrigger((prev) => prev + 1);
