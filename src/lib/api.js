@@ -579,6 +579,20 @@ export const fetchProductById = async (id, token) => {
   return response.data;
 };
 
+export const deleteProduct = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/product/${id}`, data, config);
+  return response.data;
+};
+
 export const createCategory = async (data, token) => {
   const config = {
     headers: {},
@@ -621,6 +635,20 @@ export const updateCategory = async (id, data, token) => {
   return response.data;
 };
 
+export const deleteCategory = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/category/${id}`, data, config);
+  return response.data;
+};
+
 export const updateEntry = async (id, data, token) => {
   const config = {
     headers: {},
@@ -646,6 +674,20 @@ export const restockInventory = async (id, data, token) => {
   }
 
   const response = await api.put(`/inventory/add-items/${id}`, data, config);
+  return response.data;
+};
+
+export const deleteInventory = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/inventory/${id}`, data, config);
   return response.data;
 };
 

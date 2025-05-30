@@ -12,9 +12,15 @@ import {
   Plus,
   Search,
   SquarePen,
+  Trash2,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { createInventory, getInventories, restockInventory } from "@/lib/api";
+import {
+  createInventory,
+  deleteInventory,
+  getInventories,
+  restockInventory,
+} from "@/lib/api";
 import { toast } from "sonner";
 import dayjs from "dayjs";
 import { AddStockModal } from "@/components/add-stock-modal";
@@ -40,6 +46,20 @@ export default function InventoryPage() {
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
+
+  const handleDelete = async (id) => {
+    try {
+      setLoading(true);
+      const token = user?.token;
+      await deleteInventory(id, token);
+      toast.success("Product Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete product");
+      setLoading(false);
+    }
+  };
   const columns = [
     columnHelper.accessor("id", {
       header: "Stock ID",
@@ -87,6 +107,12 @@ export default function InventoryPage() {
             }}
           >
             <SquarePen size={18} />
+          </button>
+          <button
+            className="text-white hover:text-purple-300 text-right"
+            onClick={() => handleDelete(info.row.original.id)}
+          >
+            <Trash2 size={18} />
           </button>
           <button
             className="text-white hover:text-purple-300 cursor-pointer"

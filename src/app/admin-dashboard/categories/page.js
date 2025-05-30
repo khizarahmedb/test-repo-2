@@ -10,9 +10,15 @@ import {
   ChevronsRight,
   Plus,
   SquarePen,
+  Trash2,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { getCategories, getReviews, updateReview } from "@/lib/api";
+import {
+  deleteCategory,
+  getCategories,
+  getReviews,
+  updateReview,
+} from "@/lib/api";
 import { UpdateReviewModal } from "@/components/update-review-modal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -36,6 +42,20 @@ export default function CategoryPage() {
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
+
+  const handleDelete = async (id) => {
+    try {
+      setLoading(true);
+      const token = user?.token;
+      await deleteCategory(id, token);
+      toast.success("Product Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete product");
+      setLoading(false);
+    }
+  };
   const columns = [
     columnHelper.accessor("name", {
       header: "Name",
@@ -48,7 +68,7 @@ export default function CategoryPage() {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
           <button
             className="text-white hover:text-purple-300"
             onClick={() =>
@@ -58,6 +78,12 @@ export default function CategoryPage() {
             }
           >
             <SquarePen size={18} />
+          </button>
+          <button
+            className="text-white hover:text-purple-300 text-right"
+            onClick={() => handleDelete(info.row.original.id)}
+          >
+            <Trash2 size={18} />
           </button>
         </div>
       ),
