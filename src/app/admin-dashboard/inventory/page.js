@@ -291,14 +291,11 @@ export default function InventoryPage() {
             <input
               type="text"
               className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
-              placeholder="Search Stock ID"
+              placeholder="Search Stock ID, Stock Name"
               value={searchQuery}
               onChange={(e) => {
                 const value = e.target.value;
-                // Allow only digits
-                if (/^\d*$/.test(value)) {
-                  setSearchQuery(value);
-                }
+                setSearchQuery(value);
               }}
             />
           </div>
