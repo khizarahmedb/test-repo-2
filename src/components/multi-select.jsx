@@ -40,6 +40,10 @@ const MultiSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setSelected(selectedValues);
+  }, [selectedValues]);
+
   return (
     <div className="relative" ref={dropdownRef}>
       <div

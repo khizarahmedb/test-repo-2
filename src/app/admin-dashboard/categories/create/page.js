@@ -56,6 +56,14 @@ const CreateCategoryPage = () => {
       });
       return false;
     }
+    const invalidPriority = formData.products.some(
+      (product) => Number(product.priority) === 0
+    );
+
+    if (invalidPriority) {
+      toast.error("Product priority must be greater than 0");
+      return false;
+    }
     return true;
   };
 

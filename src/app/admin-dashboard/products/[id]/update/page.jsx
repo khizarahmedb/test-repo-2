@@ -119,7 +119,8 @@ const UpdateProductPage = () => {
   const processProductData = (data) => {
     const newVariants = [];
     const updatedVariants = [];
-    const prevCategories = productData.categories || [];
+    const prevCategories =
+      productData?.categories?.map((item) => item.id) || [];
     const updatedCategories = data.categories || [];
 
     const newCategoriesAdded = updatedCategories.filter(
@@ -152,11 +153,12 @@ const UpdateProductPage = () => {
 
     const updatedIds = updatedVariants.map((v) => v.id);
 
-    const deletedVariants = productData.variants
+    const deletedVariants = (productData?.variants || [])
       .filter((apiVariant) => !updatedIds.includes(apiVariant.id))
       .map((item) => item.id);
     delete data.variants;
     delete data.stock_id;
+    delete data.categories;
     return {
       ...data,
       deleted_variants: deletedVariants,

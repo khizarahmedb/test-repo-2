@@ -305,7 +305,7 @@ const ProductForm = ({
         category: productData?.categories?.length
           ? productData.categories.map((item) => ({
               label: item.name,
-              value: item.id,
+              value: String(item.id),
             }))
           : [],
         description: productData.description,
@@ -331,7 +331,6 @@ const ProductForm = ({
       setUploadedImage(productData?.image_url);
     }
   }, [productData]);
-  console.log(delimiter);
 
   return (
     <div>

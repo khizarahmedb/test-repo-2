@@ -59,6 +59,15 @@ const UpdateCategoryPage = () => {
       });
       return false;
     }
+
+    const invalidPriority = formData.products.some(
+      (product) => Number(product.priority) === 0
+    );
+
+    if (invalidPriority) {
+      toast.error("Product priority must be greater than 0");
+      return false;
+    }
     return true;
   };
 
@@ -274,9 +283,17 @@ const UpdateCategoryPage = () => {
           (item) => item.product_id
         );
 
-        const removedProducts = prevProducts.filter(
+        let removedProducts = prevProducts.filter(
           (productId) => !currentProducts.includes(productId)
         );
+        if (removedProducts.length) {
+          removedProducts = removedProducts.map((item) => {
+            const product = categoryData.products.find(
+              (p) => p.product_id === item
+            );
+            return product.id;
+          });
+        }
         const data = {
           name: formData.name,
           products: formData.products.map((item) => ({
