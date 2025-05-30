@@ -101,7 +101,6 @@ export function AddStockModal({ isOpen, onClose, onSave, selectedInventory }) {
       });
     }
   }, [selectedInventory]);
-  console.log(formData);
 
   if (!isOpen) return null;
 
@@ -172,7 +171,7 @@ export function AddStockModal({ isOpen, onClose, onSave, selectedInventory }) {
                   <SelectItem value=";" className={"p-4 text-base"}>
                     ;
                   </SelectItem>
-                  <SelectItem value="\n" className={"p-4 text-base"}>
+                  <SelectItem value={"\n"} className={"p-4 text-base"}>
                     \n
                   </SelectItem>
                 </SelectContent>

@@ -23,6 +23,7 @@ const ProductForm = ({
   productData = null,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [delimiter, setDelimiter] = useState("");
   const [formData, setFormData] = useState({
     stock: "",
     productName: "",
@@ -90,6 +91,10 @@ const ProductForm = ({
   };
 
   const handleSelectChange = (value, field) => {
+    if (field === "stock") {
+      const stockObj = stockOptions.find((item) => item.id === +value);
+      setDelimiter(stockObj.delimiter);
+    }
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -326,6 +331,7 @@ const ProductForm = ({
       setUploadedImage(productData?.image_url);
     }
   }, [productData]);
+  console.log(delimiter);
 
   return (
     <div>
@@ -362,6 +368,13 @@ const ProductForm = ({
             {errors.stock && (
               <p className="text-red-500 text-xs">{errors.stock}</p>
             )}
+          </div>
+
+          {/* Delimiter */}
+          <div className="bg-[#242424] text-white px-6 rounded-md border border-gray-700 h-[51px] flex items-center">
+            <code className="text-white font-mono">
+              {delimiter === "\n" ? "\\n" : delimiter || "N/A"}
+            </code>
           </div>
 
           {/* Product Name */}
