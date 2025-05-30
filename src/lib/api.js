@@ -66,18 +66,14 @@ api.interceptors.request.use(
 // Response interceptor for decryption
 api.interceptors.response.use(
   async (response) => {
-    // Assuming encrypted responses will have a specific structure (e.g., iv, tag, encryptedData)
     const { iv, tag, encryptedData } = response.data || {};
 
     if (iv && tag && encryptedData) {
-      // Check if it's an encrypted payload
       try {
-        const decryptedData = await decryptData(response.data);
-        response.data = decryptedData; // Replace with decrypted data
+        const decryptedData = await decryptData(response.data); // <-- This await is correct
+        response.data = decryptedData;
       } catch (error) {
         console.error("Axios Response Decryption Error:", error);
-        // This is crucial: if decryption fails, the data is likely invalid or tampered with.
-        // You should not proceed with potentially malicious or corrupted data.
         throw new Error(
           "Failed to decrypt response data. Data might be invalid or tampered."
         );
@@ -85,9 +81,9 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    // <-- Make the error handler async too!
     // If the error response itself is encrypted, you might need to decrypt it too.
-    // However, usually error responses are sent unencrypted for easier debugging.
     if (
       error.response &&
       error.response.data &&
@@ -97,7 +93,7 @@ api.interceptors.response.use(
     ) {
       try {
         // Attempt to decrypt error data
-        const decryptedErrorData = decryptData(error.response.data);
+        const decryptedErrorData = await decryptData(error.response.data); // <-- ADD await here!
         error.response.data = decryptedErrorData;
       } catch (decryptionError) {
         console.error(
@@ -210,6 +206,114 @@ export const changePassword = async (passwordData, token) => {
   }
 
   const response = await api.put("/change-password", passwordData, config);
+  return response.data;
+};
+
+// Change username function (uses the same change-password endpoint with just name)
+export const changeUsername = async (nameData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put("/change-password", nameData, config);
+  return response.data;
+};
+
+// Get referral settings
+export const getReferralSettings = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get("/referal_settings", config);
+  return response.data;
+};
+
+// Set referral settings
+export const setReferralSettings = async (referralData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/referal_settings", referralData, config);
+  return response.data;
+};
+
+// Get reseller profit
+export const getResellerProfit = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get("/reseller-profit", config);
+  return response.data;
+};
+
+// Set reseller profit
+export const setResellerProfit = async (resellerData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/set-reseller-profit", resellerData, config);
+  return response.data;
+};
+
+// Get dashboard data
+export const getDashboard = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get("/dashboard", config);
+  return response.data;
+};
+
+// Get invoices data
+export const getInvoices = async (startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/invoice?startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
   return response.data;
 };
 
