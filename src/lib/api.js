@@ -223,6 +223,7 @@ export const getUsers = async (
     stockers: "stockers",
     supports: "supports",
   };
+
   const config = {
     headers: {},
   };
@@ -236,6 +237,113 @@ export const getUsers = async (
     `/${paths[role]}?startsWith=${startsWith}&endsWith=${endsWith}${
       searchQuery ? `&query=${searchQuery}` : ""
     }`,
+    config
+  );
+  return response.data;
+};
+// Change username function (uses the same change-password endpoint with just name)
+export const changeUsername = async (nameData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put("/change-password", nameData, config);
+  return response.data;
+};
+
+// Get referral settings
+export const getReferralSettings = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get("/referal_settings", config);
+  return response.data;
+};
+
+// Set referral settings
+export const setReferralSettings = async (referralData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/referal_settings", referralData, config);
+  return response.data;
+};
+
+// Get reseller profit
+export const getResellerProfit = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get("/reseller-profit", config);
+  return response.data;
+};
+
+// Set reseller profit
+export const setResellerProfit = async (resellerData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/set-reseller-profit", resellerData, config);
+  return response.data;
+};
+
+// Get dashboard data
+export const getDashboard = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get("/dashboard", config);
+  return response.data;
+};
+
+// Get invoices data
+export const getInvoices = async (startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/invoice?startsWith=${startsWith}&endsWith=${endsWith}`,
     config
   );
   return response.data;
