@@ -132,7 +132,7 @@ export const getUserProfile = async (token) => {
 };
 
 // Coupons pagination function
-export const getCoupons = async (startsWith, endsWith, token) => {
+export const getCoupons = async (startsWith, endsWith, token, searchQuery) => {
   const config = {
     headers: {},
   };
@@ -143,7 +143,9 @@ export const getCoupons = async (startsWith, endsWith, token) => {
   }
 
   const response = await api.get(
-    `/coupon?startsWith=${startsWith}&endsWith=${endsWith}`,
+    `/coupon?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
     config
   );
   return response.data;

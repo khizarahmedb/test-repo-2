@@ -30,39 +30,16 @@ const UpdateProductPage = () => {
       const startsWith = 0;
       const endsWith = 999;
 
-      const inventoryPromise = getInventories(startsWith, endsWith, token);
       const categoriesPromise = getCategories(startsWith, endsWith, token);
       const productPromise = fetchProductById(params.id, token);
 
       const results = await Promise.allSettled([
-        inventoryPromise,
         categoriesPromise,
         productPromise,
       ]);
 
-      // INVENTORY
-      const inventoryResult = results[0];
-      if (inventoryResult.status === "fulfilled") {
-        const response = inventoryResult.value;
-        console.log("Inventory API Response:", response);
-        if (response?.hasError) {
-          setInventoryData([]);
-          toast.error("Failed to load inventory", {
-            description: response.message || "Please try again.",
-          });
-        } else {
-          setInventoryData(response?.body?.data || []);
-        }
-      } else {
-        setInventoryData([]);
-        console.error("Error fetching inventory:", inventoryResult.reason);
-        toast.error("Failed to load inventory", {
-          description: inventoryResult.reason?.message || "Please try again.",
-        });
-      }
-
       // CATEGORIES
-      const categoriesResult = results[1];
+      const categoriesResult = results[0];
       if (categoriesResult.status === "fulfilled") {
         const response = categoriesResult.value;
         console.log("Category API Response:", response);
@@ -88,7 +65,7 @@ const UpdateProductPage = () => {
       }
 
       // PRODUCT
-      const productResult = results[2];
+      const productResult = results[1];
       if (productResult.status === "fulfilled") {
         const response = productResult.value;
         console.log("Product API Response:", response);
@@ -151,7 +128,9 @@ const UpdateProductPage = () => {
       }
     });
 
-    const updatedIds = updatedVariants.map((v) => v.id);
+    const updatedIds = data.variants
+      .map((v) => v.id)
+      .filter((v) => v !== null && v !== undefined);
 
     const deletedVariants = (productData?.variants || [])
       .filter((apiVariant) => !updatedIds.includes(apiVariant.id))

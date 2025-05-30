@@ -12,6 +12,7 @@ import {
   ChevronsRight,
   Plus,
   SquarePen,
+  Search,
 } from "lucide-react";
 import {
   getCoupons,
@@ -29,6 +30,7 @@ export default function CouponsPage() {
   const { setRoute } = useNavigationStore();
   const { user } = useUserStore();
   const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const [couponsData, setCouponsData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -106,7 +108,12 @@ export default function CouponsPage() {
         const token = user?.token;
 
         // Call the API service function with pagination parameters
-        const response = await getCoupons(startsWith, endsWith, token);
+        const response = await getCoupons(
+          startsWith,
+          endsWith,
+          token,
+          searchQuery
+        );
         console.log("Coupons API Response:", response);
 
         // Check for API errors using hasError property
@@ -284,19 +291,45 @@ export default function CouponsPage() {
     }
   };
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setCurrentPage(0);
+      setRefreshTrigger((prev) => prev + 1);
+    }, 300); // Debounce delay (in ms)
+
+    return () => {
+      clearTimeout(handler); // Clean up previous timeout if input changes again
+    };
+  }, [searchQuery]);
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-white">Coupons</h1>
-        <button
-          onClick={handleAddCoupon}
-          className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
-        >
-          <div className="border-white border-2 rounded-md p-[2px]">
-            <Plus size={18} />
+        <div className="flex items-center gap-4">
+          <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
+            <Search size={25} color="#FFFFFF" className="ml-6" />
+            <input
+              type="text"
+              className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
+              placeholder="Search ID, Name, Code"
+              value={searchQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+              }}
+            />
           </div>
-          Add Coupon
-        </button>
+          <button
+            onClick={handleAddCoupon}
+            className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
+          >
+            <div className="border-white border-2 rounded-md p-[2px]">
+              <Plus size={18} />
+            </div>
+            Add Coupon
+          </button>
+        </div>
       </div>
       <div className="rounded-lg border-2 p-4 border-purple-600 h-[84vh] flex flex-col">
         {loading ? (

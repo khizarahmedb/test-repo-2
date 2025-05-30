@@ -16,10 +16,12 @@ import MultiSelect from "./multi-select";
 import { createProduct, uploadFile } from "@/lib/api";
 import { toast } from "sonner";
 import { InputSelect } from "./input-select";
+import { useRouter } from "next/navigation";
 
 const ProductForm = ({ categoryOptions, onFormSubmit, productData = null }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [delimiter, setDelimiter] = useState("");
+  const router = useRouter();
   const [formData, setFormData] = useState({
     stock: null,
     productName: "",
@@ -336,36 +338,6 @@ const ProductForm = ({ categoryOptions, onFormSubmit, productData = null }) => {
         {/* Header Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Stock Selection */}
-          {/* <div className="space-y-2">
-            <Select
-              name="stock"
-              value={formData.stock}
-              onValueChange={(value) => handleSelectChange(value, "stock")}
-              disabled={productData !== null}
-            >
-              <SelectTrigger
-                className={` w-full bg-[#242424] text-base cursor-pointer border ${
-                  errors.stock ? "border-red-500" : "border-gray-700"
-                } rounded-md p-6 text-white placeholder-gray-400`}
-              >
-                <SelectValue placeholder="Select Stock" />
-              </SelectTrigger>
-              <SelectContent className="text-white">
-                {stockOptions.map((stock) => (
-                  <SelectItem
-                    key={stock.id}
-                    value={String(stock.id)}
-                    className="p-4 text-base"
-                  >
-                    {stock.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.stock && (
-              <p className="text-red-500 text-xs">{errors.stock}</p>
-            )}
-          </div> */}
 
           <InputSelect
             apiUrl={"/inventory?startsWith=0&endsWith=10"}
@@ -740,7 +712,7 @@ const ProductForm = ({ categoryOptions, onFormSubmit, productData = null }) => {
         {/* Action Buttons */}
         <div className="grid grid-cols-2 space-x-4 pt-6">
           <Button
-            onClick={handleCancel}
+            onClick={() => router.push("/admin-dashboard/products")}
             className="px-8 btn-gradient-cancel h-[44px] text-white border-none"
           >
             Cancel

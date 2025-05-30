@@ -185,7 +185,7 @@ export default function InvoicesPage() {
     };
 
     fetchInvoicesData();
-  }, [user?.token, currentPage, itemsPerPage, refreshTrigger, searchQuery]);
+  }, [user?.token, currentPage, itemsPerPage, refreshTrigger]);
 
   // Handle items per page change
   const handleItemsPerPageChange = (newItemsPerPage) => {
@@ -209,6 +209,17 @@ export default function InvoicesPage() {
   const totalRevenue = invoicesData
     .filter((invoice) => invoice.payment_status?.toLowerCase() === "successful")
     .reduce((sum, invoice) => sum + (invoice.inv_amount || 0), 0);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setCurrentPage(0);
+      setRefreshTrigger((prev) => prev + 1);
+    }, 300); // Debounce delay (in ms)
+
+    return () => {
+      clearTimeout(handler); // Clean up previous timeout if input changes again
+    };
+  }, [searchQuery]);
 
   return (
     <div className="space-y-6 w-full">
