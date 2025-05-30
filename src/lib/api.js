@@ -3,7 +3,7 @@ import { encryptData, decryptData } from "./crypto"; // Adjust path as needed
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -646,6 +646,39 @@ export const restockInventory = async (id, data, token) => {
   }
 
   const response = await api.put(`/inventory/add-items/${id}`, data, config);
+  return response.data;
+};
+
+export const getTickets = async (startsWith, endsWith, token, searchQuery) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/ticket?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const replaceProduct = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post(`ticket/replace`, data, config);
   return response.data;
 };
 
