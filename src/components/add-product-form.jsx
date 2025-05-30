@@ -15,17 +15,13 @@ import { Checkbox } from "./ui/checkbox";
 import MultiSelect from "./multi-select";
 import { createProduct, uploadFile } from "@/lib/api";
 import { toast } from "sonner";
+import { InputSelect } from "./input-select";
 
-const ProductForm = ({
-  stockOptions,
-  categoryOptions,
-  onFormSubmit,
-  productData = null,
-}) => {
+const ProductForm = ({ categoryOptions, onFormSubmit, productData = null }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [delimiter, setDelimiter] = useState("");
   const [formData, setFormData] = useState({
-    stock: "",
+    stock: null,
     productName: "",
     category: [],
     description: "",
@@ -61,7 +57,7 @@ const ProductForm = ({
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.stock.trim()) newErrors.stock = "Stock selection is required";
+    if (!formData.stock) newErrors.stock = "Stock selection is required";
     if (!formData.productName.trim())
       newErrors.productName = "Product name is required";
     if (!formData.category.length === 0)
@@ -92,8 +88,7 @@ const ProductForm = ({
 
   const handleSelectChange = (value, field) => {
     if (field === "stock") {
-      const stockObj = stockOptions.find((item) => item.id === +value);
-      setDelimiter(stockObj.delimiter);
+      setDelimiter(value.delimiter);
     }
     setFormData((prev) => ({
       ...prev,
@@ -243,7 +238,7 @@ const ProductForm = ({
 
       // send form data
       const data = {
-        stock_id: +formData.stock,
+        stock_id: +formData.stock.id,
         name: formData.productName,
         description: formData.description,
         remove_sold_stock: formData.removeSoldStock,
@@ -273,7 +268,7 @@ const ProductForm = ({
 
   const handleCancel = () => {
     setFormData({
-      stock: "",
+      stock: null,
       productName: "",
       category: [],
       description: "",
@@ -300,7 +295,10 @@ const ProductForm = ({
   useEffect(() => {
     if (productData) {
       setFormData({
-        stock: String(productData.stock_id),
+        stock: {
+          id: productData.stock_id,
+          name: productData.stock_name,
+        },
         productName: productData.name,
         category: productData?.categories?.length
           ? productData.categories.map((item) => ({
@@ -338,7 +336,7 @@ const ProductForm = ({
         {/* Header Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Stock Selection */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Select
               name="stock"
               value={formData.stock}
@@ -367,7 +365,18 @@ const ProductForm = ({
             {errors.stock && (
               <p className="text-red-500 text-xs">{errors.stock}</p>
             )}
-          </div>
+          </div> */}
+
+          <InputSelect
+            apiUrl={"/inventory?startsWith=0&endsWith=10"}
+            labelKey={"name"}
+            valueKey={"id"}
+            value={formData.stock}
+            placeholder="Select Inventory"
+            onChange={(e) => handleSelectChange(e, "stock")}
+            error={errors.stock}
+            disabled={productData !== null}
+          />
 
           {/* Delimiter */}
           <div className="bg-[#242424] text-white px-6 rounded-md border border-gray-700 h-[51px] flex items-center">

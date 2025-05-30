@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Search,
 } from "lucide-react";
 
 // Column helper for type-safe column definitions
@@ -26,7 +27,7 @@ export default function InvoicesPage() {
   const [error, setError] = useState(null);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
+  const [searchQuery, setSearchQuery] = useState("");
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
@@ -125,7 +126,12 @@ export default function InvoicesPage() {
         const token = user?.token;
 
         // Call the API with pagination parameters
-        const response = await getInvoices(startsWith, endsWith, token);
+        const response = await getInvoices(
+          startsWith,
+          endsWith,
+          token,
+          searchQuery
+        );
         console.log("Invoices API Response:", response);
 
         // Check for API errors using hasError property
@@ -179,7 +185,7 @@ export default function InvoicesPage() {
     };
 
     fetchInvoicesData();
-  }, [user?.token, currentPage, itemsPerPage, refreshTrigger]);
+  }, [user?.token, currentPage, itemsPerPage, refreshTrigger, searchQuery]);
 
   // Handle items per page change
   const handleItemsPerPageChange = (newItemsPerPage) => {
@@ -208,10 +214,25 @@ export default function InvoicesPage() {
     <div className="space-y-6 w-full">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-white">Invoices</h1>
-        <div className="text-sm text-gray-400">
-          {totalCount > 0
-            ? `${totalCount} invoice${totalCount !== 1 ? "s" : ""} found`
-            : "No invoices"}
+        <div className="flex items-center gap-4">
+          <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
+            <Search size={25} color="#FFFFFF" className="ml-6" />
+            <input
+              type="text"
+              className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
+              placeholder="Search ID, Customer Name"
+              value={searchQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+              }}
+            />
+          </div>
+          <div className="text-sm text-gray-400">
+            {totalCount > 0
+              ? `${totalCount} invoice${totalCount !== 1 ? "s" : ""} found`
+              : "No invoices"}
+          </div>
         </div>
       </div>
 

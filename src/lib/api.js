@@ -332,7 +332,7 @@ export const getDashboard = async (token) => {
 };
 
 // Get invoices data
-export const getInvoices = async (startsWith, endsWith, token) => {
+export const getInvoices = async (startsWith, endsWith, token, searchQuery) => {
   const config = {
     headers: {},
   };
@@ -343,7 +343,9 @@ export const getInvoices = async (startsWith, endsWith, token) => {
   }
 
   const response = await api.get(
-    `/invoice?startsWith=${startsWith}&endsWith=${endsWith}`,
+    `/invoice?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
     config
   );
   return response.data;

@@ -10,55 +10,21 @@ import { toast } from "sonner";
 
 const CreateProductPage = () => {
   const router = useRouter();
-  const [inventoryData, setInventoryData] = useState([]);
   const [categoriesData, setCategoriesData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUserStore();
   useEffect(() => {
     const fetchAllData = async () => {
       setIsLoading(true);
-      const token = user?.token;
 
-      const startsWith = 0;
-      const endsWith = 999;
+      try {
+        const token = user?.token;
+        const startsWith = 0;
+        const endsWith = 999;
 
-      const inventoryPromise = getInventories(startsWith, endsWith, token);
-      const categoriesPromise = getCategories(startsWith, endsWith, token);
-
-      const results = await Promise.allSettled([
-        inventoryPromise,
-        categoriesPromise,
-      ]);
-
-      // Inventory result
-      const inventoryResult = results[0];
-      if (inventoryResult.status === "fulfilled") {
-        const response = inventoryResult.value;
-        console.log("Inventory API Response:", response);
-        if (response?.hasError) {
-          toast.error("Failed to load inventory", {
-            description:
-              response.message || "Failed to load inventory. Please try again.",
-          });
-          setInventoryData([]);
-        } else {
-          setInventoryData(response?.body?.data || []);
-        }
-      } else {
-        console.error("Error fetching inventory:", inventoryResult.reason);
-        toast.error("Failed to load inventory", {
-          description:
-            inventoryResult.reason?.response?.data?.message ||
-            "Failed to load inventory. Please try again.",
-        });
-        setInventoryData([]);
-      }
-
-      // Categories result
-      const categoryResult = results[1];
-      if (categoryResult.status === "fulfilled") {
-        const response = categoryResult.value;
+        const response = await getCategories(startsWith, endsWith, token);
         console.log("Category API Response:", response);
+
         if (response?.hasError) {
           toast.error("Failed to load categories", {
             description:
@@ -74,11 +40,11 @@ const CreateProductPage = () => {
             })) || [];
           setCategoriesData(options);
         }
-      } else {
-        console.error("Error fetching category:", categoryResult.reason);
+      } catch (error) {
+        console.error("Error fetching category:", error);
         toast.error("Failed to load category", {
           description:
-            categoryResult.reason?.response?.data?.message ||
+            error?.response?.data?.message ||
             "Failed to load category. Please try again.",
         });
         setCategoriesData([]);
@@ -131,7 +97,6 @@ const CreateProductPage = () => {
           />
         ) : (
           <ProductForm
-            stockOptions={inventoryData}
             categoryOptions={categoriesData}
             onFormSubmit={onFormSubmit}
           />
