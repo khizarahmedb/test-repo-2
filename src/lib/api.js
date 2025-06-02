@@ -121,6 +121,11 @@ export const login = async (body) => {
   return response.data;
 };
 
+export const loginCustomer = async (body) => {
+  const response = await api.post("/customer/login", body);
+  return response.data;
+};
+
 export const getUserProfile = async (token) => {
   const config = {
     headers: {

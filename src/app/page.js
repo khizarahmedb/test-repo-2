@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import images from "@/utils/images";
-import { login } from "@/lib/api";
+import { login, loginCustomer } from "@/lib/api";
 import { useUserStore } from "@/lib/store";
 
 export default function Home() {
@@ -44,7 +44,7 @@ export default function Home() {
     setFormError("");
 
     try {
-      const response = await login({ email, password });
+      const response = await loginCustomer({ email, password });
       console.log("Login API Response:", response);
 
       if (response) {
