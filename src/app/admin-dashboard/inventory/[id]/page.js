@@ -1,7 +1,7 @@
 "use client";
 import { CustomTable } from "@/components/custom-table";
 import { EditEntryModal } from "@/components/edit-entry-modal";
-import { getInventoryItems, updateEntry } from "@/lib/api";
+import { deleteInventoryItem, getInventoryItems, updateEntry } from "@/lib/api";
 import { useUserStore } from "@/lib/store";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
@@ -11,6 +11,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   SquarePen,
+  Trash2,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
@@ -34,6 +35,17 @@ const InventoryItemsPage = () => {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
 
+  const handleDelete = async (id) => {
+    try {
+      const token = user?.token;
+      await deleteInventoryItem(id, token);
+      toast.success("User Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete user");
+    }
+  };
+
   const columns = [
     columnHelper.accessor("id", {
       header: "ID",
@@ -46,7 +58,7 @@ const InventoryItemsPage = () => {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
           <button
             className="text-white hover:text-purple-300 cursor-pointer"
             onClick={() => {

@@ -8,10 +8,12 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Search,
   SquarePen,
+  Trash2,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { getReviews, updateReview } from "@/lib/api";
+import { deleteReview, getReviews, updateReview } from "@/lib/api";
 import { UpdateReviewModal } from "@/components/update-review-modal";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ const columnHelper = createColumnHelper();
 
 export default function ReviewsPage() {
   const { setRoute } = useNavigationStore();
+  const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -38,6 +41,17 @@ export default function ReviewsPage() {
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
+
+  const handleDelete = async (id) => {
+    try {
+      const token = user?.token;
+      await deleteReview(id, token);
+      toast.success("Review Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete review");
+    }
+  };
   const columns = [
     columnHelper.accessor("id", {
       header: "Review ID",
@@ -76,7 +90,7 @@ export default function ReviewsPage() {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
           <button
             className="text-white hover:text-purple-300"
             onClick={() => handleReviewUpdate(info.row.original)}
@@ -104,7 +118,12 @@ export default function ReviewsPage() {
         const token = user?.token;
 
         // Call the API service function with pagination parameters
-        const response = await getReviews(startsWith, endsWith, token);
+        const response = await getReviews(
+          startsWith,
+          endsWith,
+          token,
+          searchQuery
+        );
         console.log("Reviews API Response:", response);
 
         // Check for API errors using hasError property
@@ -202,9 +221,37 @@ export default function ReviewsPage() {
     }
   };
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setCurrentPage(0);
+      setRefreshTrigger((prev) => prev + 1);
+    }, 300); // Debounce delay (in ms)
+
+    return () => {
+      clearTimeout(handler); // Clean up previous timeout if input changes again
+    };
+  }, [searchQuery]);
+
   return (
     <div className="space-y-4 w-full">
-      <h1 className="text-3xl font-bold text-white">Reviews</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-white">Reviews</h1>
+        <div className="flex items-center gap-4">
+          <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
+            <Search size={25} color="#FFFFFF" className="ml-6" />
+            <input
+              type="text"
+              className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
+              placeholder="Search Username"
+              value={searchQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+              }}
+            />
+          </div>
+        </div>
+      </div>
       <div className="rounded-lg border-2 mt-4 p-4 border-purple-600 h-[84vh] flex flex-col">
         {loading ? (
           <div className="flex items-center justify-center flex-1">

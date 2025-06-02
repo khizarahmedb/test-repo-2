@@ -97,12 +97,6 @@ export default function ProductsPage() {
           >
             <SquarePen size={18} />
           </button>
-          {/* <button
-            className="text-white hover:text-purple-300 text-right"
-            onClick={() => handleDelete(info.row.original.id)}
-          >
-            <Trash2 size={18} />
-          </button> */}
           <button
             className="text-white hover:text-purple-300 cursor-pointer"
             onClick={() =>

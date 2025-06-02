@@ -9,6 +9,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Plus,
+  Search,
   SquarePen,
   Trash2,
 } from "lucide-react";
@@ -37,6 +38,7 @@ export default function CategoryPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useUserStore();
 
   // Calculate pagination values
@@ -79,12 +81,6 @@ export default function CategoryPage() {
           >
             <SquarePen size={18} />
           </button>
-          {/* <button
-            className="text-white hover:text-purple-300 text-right"
-            onClick={() => handleDelete(info.row.original.id)}
-          >
-            <Trash2 size={18} />
-          </button> */}
         </div>
       ),
     }),
@@ -106,7 +102,12 @@ export default function CategoryPage() {
         const token = user?.token;
 
         // Call the API service function with pagination parameters
-        const response = await getCategories(startsWith, endsWith, token);
+        const response = await getCategories(
+          startsWith,
+          endsWith,
+          token,
+          searchQuery
+        );
         console.log("Categories API Response:", response);
 
         // Check for API errors using hasError property
@@ -160,11 +161,35 @@ export default function CategoryPage() {
     setCurrentPage(0); // Reset to first page when changing items per page
   };
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setCurrentPage(0);
+      setRefreshTrigger((prev) => prev + 1);
+    }, 300); // Debounce delay (in ms)
+
+    return () => {
+      clearTimeout(handler); // Clean up previous timeout if input changes again
+    };
+  }, [searchQuery]);
+
   return (
     <div className="space-y-4 w-full">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-white">Categories</h1>
-        <div className="flex items-center gap-[1.0625rem]">
+        <div className="flex items-center gap-4">
+          <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
+            <Search size={25} color="#FFFFFF" className="ml-6" />
+            <input
+              type="text"
+              className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
+              placeholder="Search Name"
+              value={searchQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+              }}
+            />
+          </div>
           <button
             className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
             onClick={() => {

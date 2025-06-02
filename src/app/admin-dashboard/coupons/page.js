@@ -13,6 +13,7 @@ import {
   Plus,
   SquarePen,
   Search,
+  Trash2,
 } from "lucide-react";
 import {
   getCoupons,
@@ -43,6 +44,20 @@ export default function CouponsPage() {
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
+
+  const handleDelete = async (id) => {
+    try {
+      setLoading(true);
+      const token = user?.token;
+      await deleteCoupon(id, token);
+      toast.success("Coupon Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete coupon");
+      setLoading(false);
+    }
+  };
 
   // Column definitions with edit action
   const columns = [
@@ -80,12 +95,20 @@ export default function CouponsPage() {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <button
-          className="text-white hover:text-purple-300"
-          onClick={() => handleEditCoupon(info.row.original)}
-        >
-          <SquarePen size={18} />
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            className="text-white hover:text-purple-300"
+            onClick={() => handleEditCoupon(info.row.original)}
+          >
+            <SquarePen size={18} />
+          </button>
+          <button
+            className="text-white hover:text-purple-300 text-right"
+            onClick={() => handleDelete(info.row.original.id)}
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       ),
     }),
   ];

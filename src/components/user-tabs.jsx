@@ -8,11 +8,11 @@ import React, { useState, useEffect } from "react";
 import { CustomTable } from "./custom-table";
 import UserTab from "./user-tab";
 import { createColumnHelper } from "@tanstack/react-table";
-import { SquarePen } from "lucide-react";
+import { SquarePen, Trash2 } from "lucide-react";
 import { UserUpdateModal } from "./user-update-modal";
 import { useUserStore } from "@/lib/store";
 import { toast } from "sonner";
-import { createUser, updateUser } from "@/lib/api";
+import { createUser, deleteUser, updateUser } from "@/lib/api";
 function UserTabs({
   refreshTrigger,
   setRefreshTrigger,
@@ -26,6 +26,17 @@ function UserTabs({
   const columnHelper = createColumnHelper();
 
   const { user } = useUserStore();
+
+  const handleDelete = async (id) => {
+    try {
+      const token = user?.token;
+      await deleteUser(id, token);
+      toast.success("User Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete user");
+    }
+  };
   const customersColumns = [
     columnHelper.accessor("id", {
       header: "User ID",
@@ -68,7 +79,7 @@ function UserTabs({
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
           <button
             className="text-white hover:text-purple-300 text-right"
             onClick={() => handleEditUser(info.row.original)}

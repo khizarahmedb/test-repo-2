@@ -243,6 +243,22 @@ export const getUsers = async (
   );
   return response.data;
 };
+
+// Delete a user
+export const deleteUser = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/user/${id}`, config);
+  return response.data;
+};
+
 // Change username function (uses the same change-password endpoint with just name)
 export const changeUsername = async (nameData, token) => {
   const config = {
@@ -395,7 +411,7 @@ export const getRoles = async (token) => {
   return response.data;
 };
 
-export const getReviews = async (startsWith, endsWith, token) => {
+export const getReviews = async (startsWith, endsWith, token, searchQuery) => {
   const config = {
     headers: {},
   };
@@ -406,7 +422,9 @@ export const getReviews = async (startsWith, endsWith, token) => {
   }
 
   const response = await api.get(
-    `/reviews?startsWith=${startsWith}&endsWith=${endsWith}`,
+    `/reviews?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
     config
   );
   return response.data;
@@ -423,6 +441,21 @@ export const updateReview = async (id, data, token) => {
   }
 
   const response = await api.put(`/reviews/${id}`, data, config);
+  return response.data;
+};
+
+// Delete a review
+export const deleteReview = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/review/${id}`, config);
   return response.data;
 };
 
@@ -481,6 +514,21 @@ export const getInventoryItems = async (id, startsWith, endsWith, token) => {
   return response.data;
 };
 
+// Delete a review
+export const deleteInventoryItem = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/inventory/${id}`, config);
+  return response.data;
+};
+
 export const getProducts = async (startsWith, endsWith, token, searchQuery) => {
   const config = {
     headers: {},
@@ -517,7 +565,12 @@ export const getProductVariants = async (id, startsWith, endsWith, token) => {
   return response.data;
 };
 
-export const getCategories = async (startsWith, endsWith, token) => {
+export const getCategories = async (
+  startsWith,
+  endsWith,
+  token,
+  searchQuery
+) => {
   const config = {
     headers: {},
   };
@@ -528,7 +581,9 @@ export const getCategories = async (startsWith, endsWith, token) => {
   }
 
   const response = await api.get(
-    `/category?startsWith=${startsWith}&endsWith=${endsWith}`,
+    `/category?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
     config
   );
   return response.data;
