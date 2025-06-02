@@ -31,6 +31,7 @@
     "postcss": "^8.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-popover": "^0.5.10",
     "recharts": "^2.15.3",
     "scrypt-js": "^3.0.1",
     "sonner": "^2.0.3",

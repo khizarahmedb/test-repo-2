@@ -77,12 +77,12 @@ export default function CustomerDashboardPage() {
   };
 
   return (
-    <div className="w-full h-full min-h-screen bg-[#0a0a0a] p-0">
+    <div className="w-full  p-0">
       <div className="w-full max-w-none">
-        <h1 className="text-2xl font-bold text-white mb-6">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white mb-4">Dashboard</h1>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
           {/* Total Spending */}
           <div className="bg-[#111111] border border-gray-800 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">

@@ -21,6 +21,7 @@ export const adminNavItems = [
     label: "Dashboard",
     href: "/admin-dashboard",
     icon: <BarChart className="h-5 w-5" />,
+    exactMatchOnly: true,
   },
   {
     label: "Products",
@@ -75,6 +76,7 @@ export const customerNavItems = [
     label: "Home",
     href: "/customer-dashboard",
     icon: <Home className="h-5 w-5" />,
+    exactMatchOnly: true,
   },
   {
     label: "Products",
