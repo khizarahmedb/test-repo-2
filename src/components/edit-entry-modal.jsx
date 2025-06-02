@@ -3,8 +3,15 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useUserStore } from "@/lib/store";
+import { Button } from "./ui/button";
 
-export function EditEntryModal({ isOpen, onClose, onSave, selectedEntry }) {
+export function EditEntryModal({
+  isOpen,
+  onClose,
+  onSave,
+  selectedEntry,
+  onDelete,
+}) {
   const { user } = useUserStore();
   const [formData, setFormData] = useState({
     entry: "",
@@ -92,6 +99,11 @@ export function EditEntryModal({ isOpen, onClose, onSave, selectedEntry }) {
       <div className="bg-[#161616] rounded-xl w-full max-w-[742px] p-6 border border-purple-600">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[2rem] font-bold text-white">Edit Entry</h2>
+          {selectedEntry && (
+            <Button className={"bg-[#FF0000]"} onClick={onDelete}>
+              Delete Entry
+            </Button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit}>

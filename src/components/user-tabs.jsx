@@ -27,12 +27,12 @@ function UserTabs({
 
   const { user } = useUserStore();
 
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
     try {
       const token = user?.token;
-      await deleteUser(id, token);
+      await deleteUser(selectedUser.id, token);
       toast.success("User Deleted Successfully");
-      setRefreshTrigger((prev) => prev + 1);
+      setIsModalOpen(false);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to delete user");
     }
@@ -227,6 +227,7 @@ function UserTabs({
         onClose={() => setIsModalOpen(false)}
         onSave={onSave}
         selectedUser={selectedUser}
+        onDelete={handleDelete}
       />
     </>
   );

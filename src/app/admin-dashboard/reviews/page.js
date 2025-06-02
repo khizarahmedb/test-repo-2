@@ -42,12 +42,12 @@ export default function ReviewsPage() {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
     try {
       const token = user?.token;
-      await deleteReview(id, token);
+      await deleteReview(selectedReview.id, token);
       toast.success("Review Deleted Successfully");
-      setRefreshTrigger((prev) => prev + 1);
+      setIsOpen(false);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to delete review");
     }
@@ -349,6 +349,7 @@ export default function ReviewsPage() {
         onClose={() => setIsOpen(false)}
         onSave={onSave}
         selectedReview={selectedReview}
+        onDelete={handleDelete}
       />
     </div>
   );

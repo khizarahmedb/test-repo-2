@@ -45,19 +45,6 @@ export default function CategoryPage() {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
 
-  const handleDelete = async (id) => {
-    try {
-      setLoading(true);
-      const token = user?.token;
-      await deleteCategory(id, token);
-      toast.success("Product Deleted Successfully");
-      setRefreshTrigger((prev) => prev + 1);
-      setLoading(false);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete product");
-      setLoading(false);
-    }
-  };
   const columns = [
     columnHelper.accessor("name", {
       header: "Name",

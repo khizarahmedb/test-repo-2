@@ -12,8 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Button } from "./ui/button";
 
-export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
+export function UserUpdateModal({
+  isOpen,
+  onClose,
+  onSave,
+  selectedUser,
+  onDelete,
+}) {
   const { user } = useUserStore();
   const [rolesData, setRolesData] = useState([]);
   const [formData, setFormData] = useState({
@@ -168,6 +175,11 @@ export function UserUpdateModal({ isOpen, onClose, onSave, selectedUser }) {
       <div className="bg-[#161616] rounded-xl w-full max-w-xl p-6 border border-purple-600">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-white">Add User</h2>
+          {selectedUser && (
+            <Button className={"bg-[#FF0000]"} onClick={onDelete}>
+              Delete User
+            </Button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit}>

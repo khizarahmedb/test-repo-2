@@ -14,8 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Button } from "./ui/button";
 
-export function UpdateReviewModal({ isOpen, onClose, onSave, selectedReview }) {
+export function UpdateReviewModal({
+  isOpen,
+  onClose,
+  onSave,
+  selectedReview,
+  onDelete,
+}) {
   const { user } = useUserStore();
   const [stars, setStars] = useState([
     {
@@ -151,6 +158,11 @@ export function UpdateReviewModal({ isOpen, onClose, onSave, selectedReview }) {
       <div className="bg-[#161616] rounded-xl w-full max-w-[742px] p-6 border border-purple-600">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[2rem] font-bold text-white">Update Review</h2>
+          {selectedReview && (
+            <Button className={"bg-[#FF0000]"} onClick={onDelete}>
+              Delete Review
+            </Button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit}>
