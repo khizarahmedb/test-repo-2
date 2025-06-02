@@ -3,7 +3,7 @@ import { encryptData, decryptData } from "./crypto"; // Adjust path as needed
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -132,7 +132,7 @@ export const getUserProfile = async (token) => {
 };
 
 // Coupons pagination function
-export const getCoupons = async (startsWith, endsWith, token) => {
+export const getCoupons = async (startsWith, endsWith, token, searchQuery) => {
   const config = {
     headers: {},
   };
@@ -143,7 +143,9 @@ export const getCoupons = async (startsWith, endsWith, token) => {
   }
 
   const response = await api.get(
-    `/coupon?startsWith=${startsWith}&endsWith=${endsWith}`,
+    `/coupon?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
     config
   );
   return response.data;
@@ -206,6 +208,54 @@ export const changePassword = async (passwordData, token) => {
   }
 
   const response = await api.put("/change-password", passwordData, config);
+  return response.data;
+};
+
+export const getUsers = async (
+  startsWith,
+  endsWith,
+  token,
+  role,
+  searchQuery
+) => {
+  const paths = {
+    customers: "customers",
+    managers: "managers",
+    resellers: "resellers",
+    stockers: "stockers",
+    supports: "supports",
+  };
+
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/${paths[role]}?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+// Delete a user
+export const deleteUser = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/user/${id}`, config);
   return response.data;
 };
 
@@ -300,7 +350,7 @@ export const getDashboard = async (token) => {
 };
 
 // Get invoices data
-export const getInvoices = async (startsWith, endsWith, token) => {
+export const getInvoices = async (startsWith, endsWith, token, searchQuery) => {
   const config = {
     headers: {},
   };
@@ -311,9 +361,425 @@ export const getInvoices = async (startsWith, endsWith, token) => {
   }
 
   const response = await api.get(
-    `/invoice?startsWith=${startsWith}&endsWith=${endsWith}`,
+    `/invoice?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
     config
   );
+  return response.data;
+};
+
+export const createUser = async (userData, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/create/user", userData, config);
+  return response.data;
+};
+
+export const updateUser = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/update-user-and-role`, data, config);
+  return response.data;
+};
+
+export const getRoles = async (token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(`/get-roles`, config);
+  return response.data;
+};
+
+export const getReviews = async (startsWith, endsWith, token, searchQuery) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/reviews?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const updateReview = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/reviews/${id}`, data, config);
+  return response.data;
+};
+
+// Delete a review
+export const deleteReview = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/review/${id}`, config);
+  return response.data;
+};
+
+export const getInventories = async (
+  startsWith,
+  endsWith,
+  token,
+  searchQuery
+) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/inventory?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const createInventory = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post("/inventory", data, config);
+  return response.data;
+};
+
+export const getInventoryItems = async (id, startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/inventory/items?id=${id}&startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
+  return response.data;
+};
+
+// Delete a review
+export const deleteInventoryItem = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/inventory/${id}`, config);
+  return response.data;
+};
+
+export const getProducts = async (startsWith, endsWith, token, searchQuery) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/product?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const getProductVariants = async (id, startsWith, endsWith, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/product/variants/${id}?startsWith=${startsWith}&endsWith=${endsWith}`,
+    config
+  );
+  return response.data;
+};
+
+export const getCategories = async (
+  startsWith,
+  endsWith,
+  token,
+  searchQuery
+) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/category?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const uploadFile = async (formData) => {
+  const response = await axios.post(
+    `https://files.tfgsolutions.pk/api/file-directory/upload`,
+    formData
+  );
+  return response.data;
+};
+
+export const createProduct = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post(`/product`, data, config);
+  return response.data;
+};
+
+export const updateProduct = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  if (token) {
+    config.headers["x-token"] = token;
+
+    const response = await api.put(`/product/${id}`, data, config);
+    return response.data;
+  }
+};
+
+export const fetchProductById = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(`/product/${id}`, config);
+  return response.data;
+};
+
+export const deleteProduct = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/product/${id}`, data, config);
+  return response.data;
+};
+
+export const createCategory = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post(`/category`, data, config);
+  return response.data;
+};
+
+export const getCategoryById = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(`/category/${id}`, config);
+  return response.data;
+};
+
+export const updateCategory = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/category/${id}`, data, config);
+  return response.data;
+};
+
+export const deleteCategory = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/category/${id}`, data, config);
+  return response.data;
+};
+
+export const updateEntry = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/inventory/update-item/${id}`, data, config);
+  return response.data;
+};
+
+export const restockInventory = async (id, data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.put(`/inventory/add-items/${id}`, data, config);
+  return response.data;
+};
+
+export const deleteInventory = async (id, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.delete(`/inventory/${id}`, data, config);
+  return response.data;
+};
+
+export const getTickets = async (startsWith, endsWith, token, searchQuery) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/ticket?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const replaceProduct = async (data, token) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.post(`ticket/replace`, data, config);
   return response.data;
 };
 

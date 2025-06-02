@@ -42,6 +42,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-cont: "coolvetica";
 }
 
 :root {
@@ -158,6 +159,9 @@ body {
   background-size: cover;
   background-position: center;
 }
+body {
+  overflow-y: scroll; /* Always reserve space for scrollbar */
+}
 
 input:-webkit-autofill {
   background-color: transparent !important;
@@ -230,5 +234,27 @@ input:-webkit-autofill:active {
       119deg,
       rgba(93, 67, 225, 0.2) 12.9%,
       rgba(171, 81, 222, 0.2) 86.02%
+    );
+}
+button {
+  cursor: pointer !important;
+}
+
+.btn-gradient-cancel {
+  background: linear-gradient(
+      119.32deg,
+      rgba(93, 67, 225, 0.2) 12.9%,
+      rgba(171, 81, 222, 0.2) 86.02%
+    ),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1));
+}
+.btn-gradient-save {
+  background: linear-gradient(119.32deg, #5d43e1 12.9%, #ab51de 86.02%),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0) 22.94%,
+      rgba(255, 255, 255, 0) 72.33%,
+      rgba(255, 255, 255, 0.2) 100%
     );
 }

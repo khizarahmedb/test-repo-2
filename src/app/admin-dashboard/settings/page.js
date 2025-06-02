@@ -645,12 +645,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 bg-[#ffffff0d] w-fit font-in rounded-[.75rem]">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-md text-lg font-medium transition-colors ${
               activeTab === tab
                 ? "bg-white text-black"
                 : "bg-transparent text-gray-400 hover:text-white hover:bg-gray-800"
@@ -663,13 +663,13 @@ export default function SettingsPage() {
 
       {/* Personal Tab Content */}
       {activeTab === "Personal" && (
-        <div className="bg-[#161616] rounded-lg w-2/3 border border-purple-600 p-6 space-y-6">
+        <div className="bg-[#161616] rounded-[1.75rem] w-2/3 border border-purple-600 p-6 space-y-6">
           <form onSubmit={handleSubmit}>
             <ErrorBanner error={apiError} onClose={() => setApiError(null)} />
 
             {/* General Info Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+              <h3 className="text-base font-semibold text-gray-400 uppercase tracking-wider">
                 General Info
               </h3>
               <div>
@@ -693,7 +693,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleUsernameChange}
-                  className="btn-gradient-paint text-white px-6 py-2 rounded-md font-medium transition-colors"
+                  className="btn-gradient-paint text-white px-6 py-3 rounded-md font-medium transition-colors flex-1"
                   disabled={
                     isUsernameSubmitting || formData.name === originalName
                   }
@@ -703,7 +703,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={handleUsernameCancel}
-                  className="btn-gradient-gray text-white px-6 py-2 rounded-md font-medium transition-colors"
+                  className="btn-gradient-gray text-white px-6 py-3 rounded-md font-medium transition-colors flex-1"
                   disabled={isUsernameSubmitting}
                 >
                   Cancel
@@ -713,7 +713,7 @@ export default function SettingsPage() {
 
             {/* Security Section */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium mt-5 text-gray-400 uppercase tracking-wider">
+              <h3 className="text-base font-semibold text-gray-400 uppercase tracking-wider mt-5">
                 Security
               </h3>
 
@@ -832,7 +832,7 @@ export default function SettingsPage() {
 
       {/* Referrals Tab Content */}
       {activeTab === "Referrals" && (
-        <div className="bg-[#161616] rounded-lg w-2/3 border border-purple-600 p-6 space-y-6">
+        <div className="bg-[#161616] rounded-[1.75rem] w-2/3 border border-purple-600 p-6 space-y-6">
           {isReferralLoading ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-white">Loading referral settings...</p>
@@ -847,10 +847,10 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 {/* Reward Type Dropdown */}
                 <div className="space-y-2">
-                  <label className="text-white text-sm font-medium mb-5">
+                  <label className="text-white text-base font-medium mb-5">
                     Where should the user get the referral reward?
                   </label>
-                  <div className="relative">
+                  <div className="relative mt-2">
                     <button
                       type="button"
                       onClick={() => setShowDropdown(!showDropdown)}
@@ -884,10 +884,10 @@ export default function SettingsPage() {
                 {/* Amount and Percent Fields */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-white text-sm font-medium">
+                    <label className="text-white text-base font-medium">
                       Top-up Amount
                     </label>
-                    <div className="relative">
+                    <div className="relative mt-2">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                         $
                       </span>
@@ -912,10 +912,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-white text-sm font-medium">
+                    <label className="text-white text-base font-medium">
                       Cashback Reward
                     </label>
-                    <div className="relative">
+                    <div className="relative mt-2">
                       <input
                         type="number"
                         name="percent"
@@ -966,7 +966,7 @@ export default function SettingsPage() {
 
       {/* Reseller Tab Content */}
       {activeTab === "Reseller" && (
-        <div className="bg-[#161616] rounded-lg border w-2/3 border-purple-600 p-6 space-y-6">
+        <div className="bg-[#161616] rounded-[1.75rem] border w-2/3 border-purple-600 p-6 space-y-6">
           {isResellerLoading ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-white">Loading reseller settings...</p>
@@ -980,10 +980,10 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 {/* Reseller Percentage */}
                 <div className="space-y-2">
-                  <label className="text-white pb-5 text-sm font-medium">
+                  <label className="text-white pb-5 text-base font-medium">
                     How much should the reseller get from their earnings?
                   </label>
-                  <div className="relative ">
+                  <div className="relative mt-4">
                     <input
                       type="number"
                       name="percent"

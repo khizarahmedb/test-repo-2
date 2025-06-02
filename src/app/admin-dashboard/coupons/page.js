@@ -12,6 +12,8 @@ import {
   ChevronsRight,
   Plus,
   SquarePen,
+  Search,
+  Trash2,
 } from "lucide-react";
 import {
   getCoupons,
@@ -29,6 +31,7 @@ export default function CouponsPage() {
   const { setRoute } = useNavigationStore();
   const { user } = useUserStore();
   const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const [couponsData, setCouponsData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -41,6 +44,20 @@ export default function CouponsPage() {
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
+
+  const handleDelete = async (id) => {
+    try {
+      setLoading(true);
+      const token = user?.token;
+      await deleteCoupon(id, token);
+      toast.success("Coupon Deleted Successfully");
+      setRefreshTrigger((prev) => prev + 1);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete coupon");
+      setLoading(false);
+    }
+  };
 
   // Column definitions with edit action
   const columns = [
@@ -78,12 +95,20 @@ export default function CouponsPage() {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <button
-          className="text-white hover:text-purple-300"
-          onClick={() => handleEditCoupon(info.row.original)}
-        >
-          <SquarePen size={18} />
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            className="text-white hover:text-purple-300"
+            onClick={() => handleEditCoupon(info.row.original)}
+          >
+            <SquarePen size={18} />
+          </button>
+          <button
+            className="text-white hover:text-purple-300 text-right"
+            onClick={() => handleDelete(info.row.original.id)}
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       ),
     }),
   ];
@@ -106,7 +131,12 @@ export default function CouponsPage() {
         const token = user?.token;
 
         // Call the API service function with pagination parameters
-        const response = await getCoupons(startsWith, endsWith, token);
+        const response = await getCoupons(
+          startsWith,
+          endsWith,
+          token,
+          searchQuery
+        );
         console.log("Coupons API Response:", response);
 
         // Check for API errors using hasError property
@@ -284,19 +314,45 @@ export default function CouponsPage() {
     }
   };
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setCurrentPage(0);
+      setRefreshTrigger((prev) => prev + 1);
+    }, 300); // Debounce delay (in ms)
+
+    return () => {
+      clearTimeout(handler); // Clean up previous timeout if input changes again
+    };
+  }, [searchQuery]);
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-white">Coupons</h1>
-        <button
-          onClick={handleAddCoupon}
-          className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
-        >
-          <div className="border-white border-2 rounded-md p-[2px]">
-            <Plus size={18} />
+        <div className="flex items-center gap-4">
+          <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
+            <Search size={25} color="#FFFFFF" className="ml-6" />
+            <input
+              type="text"
+              className="flex-grow h-full text-white focus-visible:border-none focus-visible:outline-none"
+              placeholder="Search ID, Name, Code"
+              value={searchQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+              }}
+            />
           </div>
-          Add Coupon
-        </button>
+          <button
+            onClick={handleAddCoupon}
+            className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
+          >
+            <div className="border-white border-2 rounded-md p-[2px]">
+              <Plus size={18} />
+            </div>
+            Add Coupon
+          </button>
+        </div>
       </div>
       <div className="rounded-lg border-2 p-4 border-purple-600 h-[84vh] flex flex-col">
         {loading ? (
