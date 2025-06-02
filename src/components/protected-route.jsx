@@ -39,8 +39,8 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
         case "Admin":
           router.push("/admin-dashboard");
           break;
-        case "superadmin":
-          router.push("/superadmin-dashboard");
+        case "Customer":
+          router.push("/customer-dashboard");
           break;
         case "agent":
           router.push("/agent-dashboard");
