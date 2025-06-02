@@ -73,32 +73,32 @@ export const adminNavItems = [
 export const customerNavItems = [
   {
     label: "Home",
-    href: "/customer",
+    href: "/customer-dashboard",
     icon: <Home className="h-5 w-5" />,
   },
   {
-    label: "Shop",
-    href: "/customer/shop",
+    label: "Products",
+    href: "/customer-dashboard/products",
     icon: <ShoppingCart className="h-5 w-5" />,
   },
   {
-    label: "Orders",
-    href: "/customer/orders",
+    label: "Wallet",
+    href: "/customer-dashboard/wallet",
     icon: <CreditCard className="h-5 w-5" />,
   },
   {
-    label: "Support",
-    href: "/customer/support",
+    label: "Tickets",
+    href: "/customer-dashboard/tickets",
     icon: <HelpCircle className="h-5 w-5" />,
   },
   {
-    label: "Notifications",
-    href: "/customer/notifications",
+    label: "Referrals",
+    href: "/customer-dashboard/referrals",
     icon: <Bell className="h-5 w-5" />,
   },
   {
     label: "Settings",
-    href: "/customer/settings",
+    href: "/customer-dashboard/settings",
     icon: <Settings className="h-5 w-5" />,
   },
 ];
