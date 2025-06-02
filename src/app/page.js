@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import images from "@/utils/images";
-import { login } from "@/lib/api";
+import { login, loginCustomer } from "@/lib/api";
 import { useUserStore } from "@/lib/store";
 
 export default function Home() {
@@ -29,9 +29,9 @@ export default function Home() {
       case "Admin":
         router.push("/admin-dashboard");
         break;
-      // case "agent":
-      //   router.push("/agent-dashboard");
-      //   break;
+      case "Customer":
+        router.push("/customer-dashboard");
+        break;
       default:
         console.error("Unknown or missing role:", role);
         router.push("/");
@@ -45,6 +45,38 @@ export default function Home() {
 
     try {
       const response = await login({ email, password });
+      console.log("Login API Response:", response);
+
+      if (response) {
+        setUser(response.body);
+        navigateBasedOnRole(response.body.role_name);
+      } else {
+        setFormError(
+          response.message ||
+            "Login successful but role information missing or invalid."
+        );
+        console.warn("Login response did not contain expected role:", response);
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Login API Error:", error);
+      setFormError(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitCustomer = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormError("");
+
+    try {
+      const response = await loginCustomer({ email, password });
       console.log("Login API Response:", response);
 
       if (response) {
@@ -87,10 +119,7 @@ shadow-[0px_64px_64px_-32px_rgba(41,15,0,0.56)] backdrop-blur-[5px] p-10"
                 </div>
               </div>
 
-              <form
-                onSubmit={handleSubmit}
-                className="flex flex-col w-full gap-6 rounded-xl"
-              >
+              <form className="flex flex-col w-full gap-6 rounded-xl">
                 <div className="flex flex-col">
                   <input
                     type="email"
@@ -121,8 +150,22 @@ shadow-[0px_64px_64px_-32px_rgba(41,15,0,0.56)] backdrop-blur-[5px] p-10"
                       ? "opacity-50 cursor-not-allowed"
                       : "cursor-pointer"
                   }`}
+                  onClick={handleSubmit}
                 >
                   {isSubmitting ? "Signing in..." : "Sign in"}
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full text-black text-xl bg-white px-4 py-2.5 rounded-lg shadow-md border-2 border-white font-medium ${
+                    isSubmitting
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
+                  onClick={handleSubmitCustomer}
+                >
+                  {isSubmitting ? "Signing in..." : "Sign in Customer"}
                 </button>
 
                 {formError && <div className="text-red-500">{formError}</div>}

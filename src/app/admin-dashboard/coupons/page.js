@@ -45,20 +45,6 @@ export default function CouponsPage() {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
 
-  const handleDelete = async (id) => {
-    try {
-      setLoading(true);
-      const token = user?.token;
-      await deleteCoupon(id, token);
-      toast.success("Coupon Deleted Successfully");
-      setRefreshTrigger((prev) => prev + 1);
-      setLoading(false);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete coupon");
-      setLoading(false);
-    }
-  };
-
   // Column definitions with edit action
   const columns = [
     columnHelper.accessor("id", {
@@ -101,12 +87,6 @@ export default function CouponsPage() {
             onClick={() => handleEditCoupon(info.row.original)}
           >
             <SquarePen size={18} />
-          </button>
-          <button
-            className="text-white hover:text-purple-300 text-right"
-            onClick={() => handleDelete(info.row.original.id)}
-          >
-            <Trash2 size={18} />
           </button>
         </div>
       ),

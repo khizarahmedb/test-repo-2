@@ -8,65 +8,87 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  MoveRight,
   Plus,
   Search,
   SquarePen,
+  Store,
   Trash2,
 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
-  deleteCategory,
-  getCategories,
-  getReviews,
-  updateReview,
+  createInventory,
+  deleteProduct,
+  getProducts,
+  getProductsForCustomer,
 } from "@/lib/api";
-import { UpdateReviewModal } from "@/components/update-review-modal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const columnHelper = createColumnHelper();
 
-export default function CategoryPage() {
+export default function ProductsPage() {
   const { setRoute } = useNavigationStore();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [totalCount, setTotalCount] = useState(0);
-  const [categoryData, setCategoryData] = useState([]);
+  const [productsData, setProductsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useUserStore();
 
   // Calculate pagination values
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
-
   const columns = [
+    columnHelper.accessor("image_url", {
+      header: "Image",
+      cell: (info) => {
+        if (!info.getValue()) {
+          return info.getValue();
+        }
+        return (
+          <Image
+            src={info.getValue()}
+            alt={info.row.original.name}
+            width="29"
+            height="29"
+            className="rounded-lg"
+          />
+        );
+      },
+    }),
     columnHelper.accessor("name", {
       header: "Name",
       cell: (info) => info.getValue(),
     }),
-    columnHelper.accessor("product_count", {
-      header: "Products",
+
+    columnHelper.accessor("variation", {
+      header: "Variation",
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor("purchase_date", {
+      header: "Purchase Date",
       cell: (info) => info.getValue(),
     }),
     columnHelper.display({
       id: "actions",
+
       cell: (info) => (
         <div className="flex justify-end gap-4">
           <button
-            className="text-white hover:text-purple-300"
+            className="bg-[#FFFFFF1A] h-[36px] rounded-[.75rem] px-4"
             onClick={() =>
               router.push(
-                `/admin-dashboard/categories/${info.row.original.id}/update`
+                `/admin-dashboard/products/${info.row.original.id}/update`
               )
             }
           >
-            <SquarePen size={18} />
+            Open Ticket
           </button>
         </div>
       ),
@@ -74,11 +96,11 @@ export default function CategoryPage() {
   ];
 
   useEffect(() => {
-    setRoute("/admin-dashboard/reviews");
+    setRoute("/admin-dashboard/inventory");
   }, [setRoute]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -89,22 +111,22 @@ export default function CategoryPage() {
         const token = user?.token;
 
         // Call the API service function with pagination parameters
-        const response = await getCategories(
+        const response = await getProductsForCustomer(
           startsWith,
           endsWith,
           token,
           searchQuery
         );
-        console.log("Categories API Response:", response);
+        console.log("Products API Response:", response);
 
         // Check for API errors using hasError property
         if (response?.hasError) {
           const errorMessage =
-            response.message || "Failed to load categories. Please try again.";
+            response.message || "Failed to load products. Please try again.";
           setError(errorMessage);
-          setCategoryData([]);
+          setProductsData([]);
           setTotalCount(0);
-          toast.error("Failed to load categories", {
+          toast.error("Failed to load products", {
             description: errorMessage,
           });
           return;
@@ -112,27 +134,27 @@ export default function CategoryPage() {
 
         // Update state with the actual API data
         if (response && response.body && response.body.data) {
-          setCategoryData(response.body.data);
+          setProductsData(response.body.data);
           setTotalCount(response.body.totalcount || 0);
         } else {
-          setCategoryData([]);
+          setProductsData([]);
           setTotalCount(0);
         }
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error("Error fetching products:", error);
         const errorMessage =
           error.response?.data?.message ||
-          "Failed to load categories. Please try again.";
+          "Failed to load products. Please try again.";
         setError(errorMessage);
-        setCategoryData([]);
-        toast.error("Failed to load categories", {
+        setProductsData([]);
+        toast.error("Failed to load products", {
           description: errorMessage,
         });
       } finally {
         setLoading(false);
       }
     };
-    fetchCategories();
+    fetchProducts();
   }, [currentPage, user, itemsPerPage, refreshTrigger]);
 
   // Pagination handlers
@@ -143,6 +165,7 @@ export default function CategoryPage() {
   const goToNextPage = () =>
     setCurrentPage((prev) => Math.min(lastPageIndex, prev + 1));
   const goToLastPage = () => setCurrentPage(lastPageIndex);
+
   const handleItemsPerPageChange = (newItemsPerPage) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(0); // Reset to first page when changing items per page
@@ -158,12 +181,11 @@ export default function CategoryPage() {
       clearTimeout(handler); // Clean up previous timeout if input changes again
     };
   }, [searchQuery]);
-
   return (
     <div className="space-y-4 w-full">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Categories</h1>
-        <div className="flex items-center gap-4">
+        <h1 className="text-3xl font-bold text-white">Products</h1>
+        <div className="flex items-center gap-[1.0625rem]">
           <div className="h-[3rem] rounded-[.75rem] bg-[#FFFFFF0D] w-[455px] flex items-center gap-[1.125rem]">
             <Search size={25} color="#FFFFFF" className="ml-6" />
             <input
@@ -180,20 +202,20 @@ export default function CategoryPage() {
           <button
             className="btn-gradient-paint  text-white px-4 py-3 rounded-md flex items-center gap-4 transition-colors"
             onClick={() => {
-              router.push("/admin-dashboard/categories/create");
+              router.push("/admin-dashboard/products/create");
             }}
           >
-            <div className="border-white border-2 rounded-md p-[2px]">
-              <Plus size={18} />
+            <div className="rounded-md p-[2px]">
+              <Store size={18} />
             </div>
-            Add Category
+            Explore Shop
           </button>
         </div>
       </div>
       <div className="rounded-lg border-2 mt-4 p-4 border-purple-600 h-[84vh] flex flex-col">
         {loading ? (
           <div className="flex items-center justify-center flex-1">
-            <p className="text-white">Loading categories...</p>
+            <p className="text-white">Loading products...</p>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center flex-1">
@@ -208,7 +230,7 @@ export default function CategoryPage() {
         ) : (
           <>
             <div className="flex-1 overflow-auto">
-              <CustomTable columns={columns} data={categoryData} />
+              <CustomTable columns={columns} data={productsData} />
             </div>
             {/* Pagination with Items Per Page Selector */}
             {totalCount > 0 && (

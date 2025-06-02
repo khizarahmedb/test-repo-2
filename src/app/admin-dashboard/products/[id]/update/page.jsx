@@ -1,8 +1,10 @@
 "use client";
 import ProductForm from "@/components/add-product-form";
 import Spinner from "@/components/Spinner";
+import { Button } from "@/components/ui/button";
 import {
   createProduct,
+  deleteProduct,
   fetchProductById,
   getCategories,
   getInventories,
@@ -171,20 +173,37 @@ const UpdateProductPage = () => {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      const token = user?.token;
+      await deleteProduct(params.id, token);
+      toast.success("Product Deleted Successfully");
+      router.push("/admin-dashboard/products");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete product");
+    }
+  };
+
   return (
     <div className="space-y-4 w-full">
-      <div className="flex items-center gap-4">
-        <ArrowLeft
-          color="#fff"
-          size="34"
-          className="cursor-pointer"
-          onClick={() => {
-            router.push("/admin-dashboard/products");
-          }}
-        />
-        <h1 className="text-[2rem] text-white font-cont font-normal">
-          Edit Product
-        </h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <ArrowLeft
+            color="#fff"
+            size="34"
+            className="cursor-pointer"
+            onClick={() => {
+              router.push("/admin-dashboard/products");
+            }}
+          />
+          <h1 className="text-[2rem] text-white font-cont font-normal">
+            Edit Product
+          </h1>
+        </div>
+
+        <Button className={"bg-[#FF0000]"} onClick={handleDelete}>
+          Delete Product
+        </Button>
       </div>
       <div className="relative rounded-lg border-2 mt-4 p-4 border-purple-600 h-[84vh] flex flex-col overflow-y-auto">
         {isLoading ? (

@@ -22,8 +22,8 @@ export function AppSidebar() {
   const { currentRoute, setRoute } = useNavigationStore();
 
   const navItems = React.useMemo(() => {
-    return getNavItemsByRole("admin");
-  }, []);
+    return getNavItemsByRole(user?.role_name);
+  }, [user]);
 
   React.useEffect(() => {
     if (
@@ -51,7 +51,7 @@ export function AppSidebar() {
         <div className="flex flex-col items-center gap-2 px-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 overflow-hidden"></div>
           <div className="flex flex-col items-center">
-            <span className="text-xs text-white/70">Admin</span>
+            <span className="text-xs text-white/70">{user?.role_name}</span>
             <span className="text-sm font-medium text-white">
               {user?.name || "Andrew Smith"}
             </span>

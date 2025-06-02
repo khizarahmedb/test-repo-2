@@ -121,6 +121,11 @@ export const login = async (body) => {
   return response.data;
 };
 
+export const loginCustomer = async (body) => {
+  const response = await api.post("/customer/login", body);
+  return response.data;
+};
+
 export const getUserProfile = async (token) => {
   const config = {
     headers: {
@@ -541,6 +546,30 @@ export const getProducts = async (startsWith, endsWith, token, searchQuery) => {
 
   const response = await api.get(
     `/product?startsWith=${startsWith}&endsWith=${endsWith}${
+      searchQuery ? `&query=${searchQuery}` : ""
+    }`,
+    config
+  );
+  return response.data;
+};
+
+export const getProductsForCustomer = async (
+  startsWith,
+  endsWith,
+  token,
+  searchQuery
+) => {
+  const config = {
+    headers: {},
+  };
+
+  // Add token to headers if provided
+  if (token) {
+    config.headers["x-token"] = token;
+  }
+
+  const response = await api.get(
+    `/product/customer?startsWith=${startsWith}&endsWith=${endsWith}${
       searchQuery ? `&query=${searchQuery}` : ""
     }`,
     config

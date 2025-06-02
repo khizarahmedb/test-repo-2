@@ -15,6 +15,7 @@ import {
 import {
   createCategory,
   createProduct,
+  deleteCategory,
   getCategories,
   getCategoryById,
   getInventories,
@@ -376,6 +377,19 @@ const UpdateCategoryPage = () => {
     }
   }, [categoryData]);
 
+  const handleDelete = async () => {
+    try {
+      const token = user?.token;
+      await deleteCategory(params.id, token);
+      toast.success("Category Deleted Successfully");
+      router.push("/admin-dashboard/categories");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete category"
+      );
+    }
+  };
+
   return (
     <div className="space-y-4 w-full">
       <div className="flex items-center justify-between gap-4">
@@ -393,6 +407,14 @@ const UpdateCategoryPage = () => {
           </h1>
         </div>
         <div className="flex items-center gap-[1.0625rem]">
+          <Button
+            className={
+              "h-[44px] rounded-[.75rem] px-[1.25rem] text-white bg-[#FF0000]"
+            }
+            onClick={handleDelete}
+          >
+            Delete Category
+          </Button>
           <Button
             className={
               "h-[44px] rounded-[.75rem] px-[1.25rem] text-white bg-[#FFFFFF1A]"

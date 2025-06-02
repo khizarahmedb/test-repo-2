@@ -135,9 +135,9 @@ export const staffNavItems = [
 // Get navigation items based on user role
 export const getNavItemsByRole = (role) => {
   switch (role) {
-    case "admin":
+    case "Admin":
       return adminNavItems;
-    case "customer":
+    case "Customer":
       return customerNavItems;
     case "staff":
       return staffNavItems;

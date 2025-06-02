@@ -1,7 +1,13 @@
 "use client";
 import { CustomTable } from "@/components/custom-table";
 import { EditEntryModal } from "@/components/edit-entry-modal";
-import { deleteInventoryItem, getInventoryItems, updateEntry } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import {
+  deleteInventory,
+  deleteInventoryItem,
+  getInventoryItems,
+  updateEntry,
+} from "@/lib/api";
 import { useUserStore } from "@/lib/store";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
@@ -35,14 +41,24 @@ const InventoryItemsPage = () => {
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const lastPageIndex = Math.max(0, totalPages - 1);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async () => {
     try {
       const token = user?.token;
-      await deleteInventoryItem(id, token);
-      toast.success("User Deleted Successfully");
-      setRefreshTrigger((prev) => prev + 1);
+      await deleteInventory(params.id, token);
+      toast.success("Stock Deleted Successfully");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to delete user");
+      toast.error(error?.response?.data?.message || "Failed to delete stock");
+    }
+  };
+
+  const handleEntryDelete = async () => {
+    try {
+      const token = user?.token;
+      await deleteInventoryItem(selectedEntry.id, token);
+      toast.success("Stock Deleted Successfully");
+      setIsOpen(false);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete stock");
     }
   };
 
@@ -194,18 +210,23 @@ const InventoryItemsPage = () => {
 
   return (
     <div className="space-y-4 w-full">
-      <div className="flex items-center gap-4">
-        <ArrowLeft
-          color="#fff"
-          size="34"
-          className="cursor-pointer"
-          onClick={() => {
-            router.push("/admin-dashboard/inventory");
-          }}
-        />
-        <h1 className="text-[2rem] text-white font-cont font-normal">
-          {searchParams.get("title")}
-        </h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <ArrowLeft
+            color="#fff"
+            size="34"
+            className="cursor-pointer"
+            onClick={() => {
+              router.push("/admin-dashboard/inventory");
+            }}
+          />
+          <h1 className="text-[2rem] text-white font-cont font-normal">
+            {searchParams.get("title")}
+          </h1>
+        </div>
+        <Button className={"bg-[#FF0000]"} onClick={handleDelete}>
+          Delete Stock
+        </Button>
       </div>
       <div className="rounded-lg border-2 mt-4 p-4 border-purple-600 h-[84vh] flex flex-col overflow-y-auto">
         {loading ? (
@@ -303,6 +324,7 @@ const InventoryItemsPage = () => {
         onClose={() => setIsOpen(false)}
         onSave={onSave}
         selectedEntry={selectedEntry}
+        onDelete={handleEntryDelete}
       />
     </div>
   );
